@@ -1,0 +1,5 @@
+{
+  "rwr_profile_folder_path": "temp/profiles",
+  "server_data_folder_path": "temp/data",
+  "server_log_folder_path": "temp/logs"
+}
