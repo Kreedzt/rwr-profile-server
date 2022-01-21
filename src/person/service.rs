@@ -1,7 +1,7 @@
 use actix_web::{HttpResponse, Responder, get, post, web};
 use tracing::instrument;
 use tracing::log::{info, error};
-use crate::Config;
+use crate::{AppData, Config};
 use crate::person::extract::extract_person;
 use crate::person::save::save_person_to_file;
 use super::model::{UpdatePersonReq, StashItemTag, Person};
@@ -36,7 +36,7 @@ async fn query_person(config: web::Data<Config>,id: web::Path<(u64,)>) -> impl R
 
 #[instrument]
 #[post("/update/{id}")]
-async fn update_person(config: web::Data<Config>, id: web::Path<(u64,)>, data: web::Json<UpdatePersonReq>) -> impl Responder {
+async fn update_person(config: web::Data<AppData>, id: web::Path<(u64,)>, data: web::Json<UpdatePersonReq>) -> impl Responder {
     info!("");
     let query_id = id.into_inner().0;
     let source = extract_person(query_id, &config.rwr_profile_folder_path);
@@ -46,7 +46,7 @@ async fn update_person(config: web::Data<Config>, id: web::Path<(u64,)>, data: w
 
 #[instrument]
 #[post("/reset_xp_5_stars/{id}")]
-async fn reset_xp_5_starts(config: web::Data<Config>, id: web::Path<(u64,)>) -> impl Responder {
+async fn reset_xp_5_starts(config: web::Data<AppData>, id: web::Path<(u64,)>) -> impl Responder {
     info!("");
     let query_id = id.into_inner().0;
     let source = extract_person(query_id, &config.rwr_profile_folder_path);
@@ -82,7 +82,7 @@ async fn reset_xp_5_starts(config: web::Data<Config>, id: web::Path<(u64,)>) -> 
 
 #[instrument]
 #[post("/update_stash/{id}")]
-async fn update_stash(config: web::Data<Config>, id: web::Path<(u64,)>, data: web::Json<Vec<StashItemTag>>) -> impl Responder {
+async fn update_stash(config: web::Data<AppData>, id: web::Path<(u64,)>, data: web::Json<Vec<StashItemTag>>) -> impl Responder {
     info!("");
     let query_id = id.into_inner().0;
     let source = extract_person(query_id, &config.rwr_profile_folder_path);

@@ -1,8 +1,9 @@
-use actix_web::{App, HttpServer};
+use std::sync::{Arc, Mutex};
+use actix_web::{App, HttpServer, web};
 use tracing::info;
 use tracing_subscriber;
 use anyhow::{Result, Error};
-use crate::model::Config;
+use crate::model::{AppData, Config};
 use crate::person::service::person_config;
 use crate::profile::service::profile_config;
 use crate::user::service::user_config;
@@ -16,6 +17,14 @@ mod person;
 #[actix_web::main]
 async fn main() -> Result<()> {
     let config = init::init_config()?;
+    let user_json_lock = Mutex::new(0);
+
+    let app_data = web::Data::new(AppData {
+        server_data_folder_path: config.server_data_folder_path,
+        rwr_profile_folder_path: config.rwr_profile_folder_path,
+        server_log_folder_path: config.server_log_folder_path,
+        user_json_lock: Mutex::new(0)
+    });
 
     tracing_subscriber::FmtSubscriber::builder()
         .init();
@@ -31,12 +40,11 @@ async fn main() -> Result<()> {
     //     .with_writer(non_blocking)
     //     .init();
 
-    info!("completed reading config: {:?}", config);
+    info!("completed reading app_data: {:?}", app_data);
 
     HttpServer::new(move || {
-        let config = config.clone();
         App::new()
-            .data(config)
+            .app_data(web::Data::clone(&app_data))
             .configure(user_config)
             .configure(profile_config)
             .configure(person_config)

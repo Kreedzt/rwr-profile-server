@@ -1,7 +1,7 @@
 use actix_web::{HttpResponse, Responder, get, post, web};
 use tracing::instrument;
 use tracing::log::info;
-use crate::Config;
+use crate::{AppData, Config};
 
 pub fn profile_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -13,7 +13,7 @@ pub fn profile_config(cfg: &mut web::ServiceConfig) {
 
 #[instrument]
 #[get("/query/{id}")]
-async fn query_profile(config: web::Data<Config>,id: web::Path<(u64,)>) -> impl Responder {
+async fn query_profile(config: web::Data<AppData>,id: web::Path<(u64,)>) -> impl Responder {
     HttpResponse::Ok().body("query profile")
 }
 
