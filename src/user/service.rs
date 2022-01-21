@@ -18,7 +18,6 @@ pub fn user_config(cfg: &mut web::ServiceConfig) {
 #[instrument]
 #[post("/register")]
 async fn register(config: web::Data<Config>, user: web::Json<RegisterReq>) -> impl Responder {
-    info!("register service, config: {:?}, user, {:?}", config, user);
     let res = register_user(&user.username, &user.password, &config.server_data_folder_path);
 
     match res {
@@ -33,7 +32,6 @@ async fn register(config: web::Data<Config>, user: web::Json<RegisterReq>) -> im
 #[instrument]
 #[post("/login")]
 async fn login(config: web::Data<Config>, info: web::Json<LoginReq>) -> impl Responder {
-    info!("login service, config: {:?}, info, {:?}", config, info);
     let profile_folder = &config.rwr_profile_folder_path;
     println!("profile_folder: {}", profile_folder);
     println!("info: {:?}", info);
@@ -43,13 +41,11 @@ async fn login(config: web::Data<Config>, info: web::Json<LoginReq>) -> impl Res
 #[instrument]
 #[get("/query/{id}")]
 async fn get_user(id: web::Path<(u64,)>) -> impl Responder {
-    info!("get_user service, id: {:?}", id);
     HttpResponse::Ok().body("user info!")
 }
 
 #[instrument]
 #[get("/query_all")]
 async fn get_all_user(config: web::Data<Config>) -> impl Responder {
-    info!("get_all_user service, config: {:?}", config);
     HttpResponse::Ok().body("all user info!")
 }
