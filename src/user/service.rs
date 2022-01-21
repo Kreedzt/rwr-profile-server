@@ -18,13 +18,13 @@ pub fn user_config(cfg: &mut web::ServiceConfig) {
 #[instrument]
 #[post("/register")]
 async fn register(config: web::Data<Config>, user: web::Json<RegisterReq>) -> impl Responder {
-    info!("user/register, config: {:?}, {:?}", config, user);
+    info!("");
     let res = register_user(&user.username, &user.password, &config.server_data_folder_path);
 
     match res {
         Ok(user) => HttpResponse::Ok().json(user),
         Err(err) => {
-            error!("[user]: register service, error: {:?}", err);
+            error!("register, error: {:?}", err);
             HttpResponse::BadRequest().body("err")
         },
     }
@@ -34,8 +34,7 @@ async fn register(config: web::Data<Config>, user: web::Json<RegisterReq>) -> im
 #[post("/login")]
 async fn login(config: web::Data<Config>, info: web::Json<LoginReq>) -> impl Responder {
     let profile_folder = &config.rwr_profile_folder_path;
-    println!("profile_folder: {}", profile_folder);
-    println!("info: {:?}", info);
+
     HttpResponse::Ok().body("OK")
 }
 
