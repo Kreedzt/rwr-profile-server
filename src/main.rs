@@ -1,13 +1,9 @@
 use actix_web::{App, HttpServer};
 use tracing::info;
-use tracing::instrument::WithSubscriber;
 use tracing_subscriber;
-use tracing_subscriber::fmt::MakeWriter;
-use tracing_appender;
-use tracing_appender::rolling;
-use tracing_actix_web::TracingLogger;
 use anyhow::{Result, Error};
 use crate::model::Config;
+use crate::person::service::person_config;
 use crate::profile::service::profile_config;
 use crate::user::service::user_config;
 
@@ -15,6 +11,7 @@ mod user;
 mod init;
 mod model;
 mod profile;
+mod person;
 
 #[actix_web::main]
 async fn main() -> Result<()> {
@@ -42,6 +39,7 @@ async fn main() -> Result<()> {
             .data(config)
             .configure(user_config)
             .configure(profile_config)
+            .configure(person_config)
     })
         .bind("127.0.0.1:8080")?
         .run()

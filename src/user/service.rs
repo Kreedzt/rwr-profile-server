@@ -18,6 +18,7 @@ pub fn user_config(cfg: &mut web::ServiceConfig) {
 #[instrument]
 #[post("/register")]
 async fn register(config: web::Data<Config>, user: web::Json<RegisterReq>) -> impl Responder {
+    info!("user/register, config: {:?}, {:?}", config, user);
     let res = register_user(&user.username, &user.password, &config.server_data_folder_path);
 
     match res {
