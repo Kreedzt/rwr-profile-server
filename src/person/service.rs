@@ -1,8 +1,11 @@
-use actix_web::{HttpResponse, Responder, get, post, web};
+use actix_web::{HttpResponse, Responder, get, post, web, App};
+use actix_web::client::SendRequestError::Http;
 use tracing::instrument;
 use tracing::log::{info, error};
 use crate::{AppData, Config};
+use crate::model::ResponseJson;
 use crate::person::extract::extract_person;
+use crate::person::model::GroupInfo;
 use crate::person::save::save_person_to_file;
 use super::model::{UpdatePersonReq, StashItemTag, Person};
 
@@ -13,12 +16,13 @@ pub fn person_config(cfg: &mut web::ServiceConfig) {
             .service(update_person)
             .service(reset_xp_5_starts)
             .service(update_stash)
+            .service(update_group_type)
     );
 }
 
 #[instrument]
 #[get("/query/{id}")]
-async fn query_person(config: web::Data<Config>,id: web::Path<(u64,)>) -> impl Responder {
+async fn query_person(config: web::Data<AppData>,id: web::Path<(u64,)>) -> impl Responder {
     info!("");
     let res = extract_person(id.into_inner().0, &config.rwr_profile_folder_path);
 
@@ -29,7 +33,7 @@ async fn query_person(config: web::Data<Config>,id: web::Path<(u64,)>) -> impl R
         },
         Err(err) => {
             error!("extract err: {:?}", err);
-            HttpResponse::NotFound().body("extract err")
+            HttpResponse::NotFound().json(ResponseJson::default().set_err_msg(&err.to_string()))
         }
     }
 }
@@ -41,7 +45,7 @@ async fn update_person(config: web::Data<AppData>, id: web::Path<(u64,)>, data: 
     let query_id = id.into_inner().0;
     let source = extract_person(query_id, &config.rwr_profile_folder_path);
 
-    HttpResponse::Ok().body("update person")
+    HttpResponse::Ok().json(ResponseJson::default())
 }
 
 #[instrument]
@@ -51,7 +55,7 @@ async fn reset_xp_5_starts(config: web::Data<AppData>, id: web::Path<(u64,)>) ->
     let query_id = id.into_inner().0;
     let source = extract_person(query_id, &config.rwr_profile_folder_path);
 
-    match source {
+    return match source {
         Ok(person) => {
             let new_person = Person {
                 max_authority_reached: 11.098661,
@@ -63,21 +67,22 @@ async fn reset_xp_5_starts(config: web::Data<AppData>, id: web::Path<(u64,)>) ->
 
             match save_person_to_file(&config.rwr_profile_folder_path, query_id, &new_person) {
                 Ok(_) => {
-                    HttpResponse::Ok().body("update stash successful")
+                    HttpResponse::Ok().json(ResponseJson::default()
+                        .set_successful_msg("update stash successful"))
                 },
                 Err(err) => {
                     error!("save person error {:?}", err);
-                    HttpResponse::NotFound().body("save person error")
+                    HttpResponse::BadRequest().json(ResponseJson::default()
+                        .set_err_msg("save person error"))
                 }
             }
         },
         Err(err) => {
             error!("merge person error {:?}", err);
-            HttpResponse::NotFound().body("merge person error")
+            HttpResponse::BadRequest().json(ResponseJson::default()
+                .set_err_msg("save person error"))
         }
     };
-
-    HttpResponse::Ok().body("reset xp 5 starts")
 }
 
 #[instrument]
@@ -87,7 +92,7 @@ async fn update_stash(config: web::Data<AppData>, id: web::Path<(u64,)>, data: w
     let query_id = id.into_inner().0;
     let source = extract_person(query_id, &config.rwr_profile_folder_path);
 
-    match source {
+    return match source {
         Ok(person) => {
             let new_person = Person {
                 stash_item_list: data.into_inner(),
@@ -98,19 +103,56 @@ async fn update_stash(config: web::Data<AppData>, id: web::Path<(u64,)>, data: w
 
             match save_person_to_file(&config.rwr_profile_folder_path, query_id, &new_person) {
                 Ok(_) => {
-                    HttpResponse::Ok().body("update stash successful")
+                    HttpResponse::Ok().json(ResponseJson::default()
+                        .set_successful_msg("update stash successful"))
                 },
                 Err(err) => {
                     error!("save person error {:?}", err);
-                    HttpResponse::NotFound().body("save person error")
+                    HttpResponse::BadRequest().json(ResponseJson::default()
+                        .set_err_msg("save person error"))
                 }
             }
         },
         Err(err) => {
             error!("merge person error {:?}", err);
-            HttpResponse::NotFound().body("merge person error")
+            HttpResponse::BadRequest().json(ResponseJson::default()
+                .set_err_msg("merge person error"))
         }
     };
+}
 
-    HttpResponse::Ok().body("update stash outter successful")
+#[instrument]
+#[post("/update_group_type/{id}")]
+async fn update_group_type(config: web::Data<AppData>, id: web::Path<(u64,)>, data: web::Json<GroupInfo>) -> impl Responder {
+    info!("");
+    let query_id = id.into_inner().0;
+    let source = extract_person(query_id, &config.rwr_profile_folder_path);
+
+    return match source {
+        Ok(person) => {
+            let new_person = Person {
+                soldier_group_name: data.into_inner().group_type,
+                ..person
+            };
+
+            info!("new_person: {:?}", new_person);
+
+            match save_person_to_file(&config.rwr_profile_folder_path, query_id, &new_person) {
+                Ok(_) => {
+                    HttpResponse::Ok().json(ResponseJson::default()
+                        .set_successful_msg("update group type successful"))
+                },
+                Err(err) => {
+                    error!("save person error {:?}", err);
+                    HttpResponse::BadRequest().json(ResponseJson::default()
+                        .set_err_msg("save person error"))
+                }
+            }
+        },
+        Err(err) => {
+            error!("merge person error {:?}", err);
+            HttpResponse::BadRequest().json(ResponseJson::default()
+                .set_err_msg("merge person error"))
+        }
+    };
 }

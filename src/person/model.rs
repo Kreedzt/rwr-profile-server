@@ -99,3 +99,8 @@ impl Default for StashItemTag {
 pub struct UpdatePersonReq {
     pub person: Person
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct GroupInfo {
+    pub group_type: String
+}

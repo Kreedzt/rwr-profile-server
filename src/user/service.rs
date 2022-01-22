@@ -2,6 +2,7 @@ use actix_web::{HttpResponse, Responder, get, post, web};
 use tracing::{error, instrument};
 use tracing::log::{info, warn};
 use crate::{AppData, Config};
+use crate::model::ResponseJson;
 use crate::user::model::{LoginReq, RegisterReq, User};
 use crate::user::utils::{get_user_info, get_user_json_data, register_user, update_user_list, validate_user};
 
@@ -24,7 +25,7 @@ async fn register(config: web::Data<AppData>, user: web::Json<RegisterReq>) -> i
     info!("call register_us fn");
     let res = register_user(&user.username, &user.password, &config);
 
-    match res {
+    return match res {
         Ok(id) => {
             return match get_user_json_data(&config.server_data_folder_path) {
                 Ok(mut user_json_data) => {
@@ -38,23 +39,31 @@ async fn register(config: web::Data<AppData>, user: web::Json<RegisterReq>) -> i
                     match update_user_list(user_json_data.user_list, &config.server_data_folder_path) {
                         Ok(_) => {
                             info!("user: {}, profile_id: {} register successful", user.username, id);
-                            HttpResponse::Ok().body("register succcessful")
+                            HttpResponse::Ok().json(ResponseJson::default()
+                                .set_successful_msg("register successful"))
                         },
                         Err(e) => {
                             error!("{:?}", e);
-                            HttpResponse::BadRequest().body(e.to_string())
+                            HttpResponse::BadRequest().json(
+                                ResponseJson::default()
+                                    .set_err_msg(&e.to_string())
+                            )
                         }
                     }
                 },
                 Err(e) => {
                     error!("{:?}", e);
-                    HttpResponse::BadRequest().body(e.to_string())
+                    HttpResponse::BadRequest().json(
+                        ResponseJson::default()
+                            .set_err_msg(&e.to_string()))
                 }
             }
         },
         Err(err) => {
             error!("register, error: {:?}", err);
-            HttpResponse::BadRequest().body(err.to_string())
+            HttpResponse::BadRequest().json(
+                ResponseJson::default()
+                    .set_err_msg(&err.to_string()))
         },
     }
 }
@@ -72,25 +81,27 @@ async fn login(config: web::Data<AppData>, info: web::Json<LoginReq>) -> impl Re
                 },
                 Err(e) => {
                     error!("{:?}", e);
-                    HttpResponse::BadRequest().body(e.to_string())
-                }
+                    HttpResponse::BadRequest().json(
+                        ResponseJson::default()
+                            .set_err_msg(&e.to_string()))                }
             }
         }
         Err(e) => {
             error!("{:?}", e);
-            HttpResponse::BadRequest().body(e.to_string())
-        }
+            HttpResponse::BadRequest().json(
+                ResponseJson::default()
+                    .set_err_msg(&e.to_string()))        }
     }
 }
 
 #[instrument]
 #[get("/query/{id}")]
 async fn get_user(id: web::Path<(u64,)>) -> impl Responder {
-    HttpResponse::Ok().body("user info!")
+    HttpResponse::Ok().json(ResponseJson::default())
 }
 
 #[instrument]
 #[get("/query_all")]
 async fn get_all_user(config: web::Data<AppData>) -> impl Responder {
-    HttpResponse::Ok().body("all user info!")
+    HttpResponse::Ok().json(ResponseJson::default())
 }
