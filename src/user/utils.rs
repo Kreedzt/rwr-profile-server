@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use serde_json;
 use tracing_log::log::info;
-use crate::{AppData, Config};
+use crate::{AppData};
 use crate::user::extract::get_user_profile_id;
 use super::model::{User, Users};
 use std::fs;

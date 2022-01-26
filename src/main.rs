@@ -1,9 +1,8 @@
-use std::sync::{Arc, Mutex};
+use std::sync::Mutex;
 use actix_web::{App, HttpServer, web};
 use tracing::info;
 use tracing_subscriber::{filter::LevelFilter, prelude::*};
 use tracing_appender::rolling;
-use tracing_subscriber::fmt::writer::MakeWriterExt;
 use anyhow::{Result, Error};
 use crate::model::{AppData, Config};
 use crate::person::service::person_config;

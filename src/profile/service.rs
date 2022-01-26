@@ -1,7 +1,6 @@
 use actix_web::{HttpResponse, Responder, get, post, web};
 use tracing::instrument;
-use tracing::log::info;
-use crate::{AppData, Config};
+use crate::{AppData};
 
 pub fn profile_config(cfg: &mut web::ServiceConfig) {
     cfg.service(

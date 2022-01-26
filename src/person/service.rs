@@ -1,5 +1,4 @@
-use actix_web::{HttpResponse, Responder, get, post, web, App};
-use actix_web::client::SendRequestError::Http;
+use actix_web::{HttpResponse, Responder, get, post, web};
 use tracing::instrument;
 use tracing::log::{info, error};
 use crate::{AppData, Config};

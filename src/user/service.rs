@@ -1,7 +1,7 @@
 use actix_web::{HttpResponse, Responder, get, post, web};
 use tracing::{error, instrument};
-use tracing::log::{info, warn};
-use crate::{AppData, Config};
+use tracing::log::{info};
+use crate::{AppData};
 use crate::model::ResponseJson;
 use crate::user::model::{LoginReq, RegisterReq, User};
 use crate::user::utils::{get_user_info, get_user_json_data, register_user, update_user_list, validate_user};
