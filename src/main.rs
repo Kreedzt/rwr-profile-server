@@ -1,7 +1,9 @@
 use std::sync::{Arc, Mutex};
 use actix_web::{App, HttpServer, web};
 use tracing::info;
-use tracing_subscriber;
+use tracing_subscriber::{filter::LevelFilter, prelude::*};
+use tracing_appender::rolling;
+use tracing_subscriber::fmt::writer::MakeWriterExt;
 use anyhow::{Result, Error};
 use crate::model::{AppData, Config};
 use crate::person::service::person_config;
@@ -17,7 +19,8 @@ mod person;
 #[actix_web::main]
 async fn main() -> Result<()> {
     let config = init::init_config()?;
-    let user_json_lock = Mutex::new(0);
+
+    let server_log_folder_path = config.server_log_folder_path.clone();
 
     let app_data = web::Data::new(AppData {
         server_data_folder_path: config.server_data_folder_path,
@@ -26,19 +29,23 @@ async fn main() -> Result<()> {
         user_json_lock: Mutex::new(0)
     });
 
-    tracing_subscriber::FmtSubscriber::builder()
+    let file_appender = rolling::daily(&server_log_folder_path, "info.log");
+
+    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+    let fmt_layer = tracing_subscriber::fmt::layer()
+        .with_writer(non_blocking)
+        .with_ansi(false)
+        .with_filter(LevelFilter::INFO);
+
+    let std_out_layer = tracing_subscriber::fmt::layer()
+        .pretty()
+        .with_filter(LevelFilter::INFO);
+
+    tracing_subscriber::registry()
+        .with(std_out_layer)
+        .with(fmt_layer)
         .init();
-
-    // TODO: why not effect
-    // let info_file = rolling::daily(&config.server_log_folder_path, "info");
-    // let file_appender = rolling::RollingFileAppender::new(rolling::Rotation::DAILY, &config.server_log_folder_path, "info");
-    //
-    // let file_appender = tracing_appender::rolling::daily(&config.server_log_folder_path, "info.log");
-    // let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
-
-    // tracing_subscriber::fmt()
-    //     .with_writer(non_blocking)
-    //     .init();
 
     info!("completed reading app_data: {:?}", app_data);
 
