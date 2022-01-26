@@ -1254,7 +1254,6 @@ version = "0.2.0"
 dependencies = [
  "actix-web",
  "anyhow",
- "once_cell",
  "quick-xml",
  "serde",
  "serde_json",
