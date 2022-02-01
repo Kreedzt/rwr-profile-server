@@ -3,6 +3,8 @@ use quick_xml::events::{BytesEnd, BytesStart, Event, BytesText};
 use anyhow::Result;
 use quick_xml::Writer;
 use std::io::{Cursor, Write};
+use tracing::{error, warn};
+use crate::person::model::StashItemTag;
 
 pub fn save_person(p: &Person) -> Result<String> {
     let mut writer = Writer::new_with_indent(Cursor::new(Vec::new()), b' ', 4);
@@ -101,6 +103,25 @@ pub fn save_person_to_file(path: &str, id: u64, person: &Person) -> Result<()> {
     let mut file = std::fs::File::create(target_path)?;
 
     file.write_all(res_person_str.as_bytes())?;
+
+    Ok(())
+}
+
+pub fn insert_all_person_backpack_to_file(path: &str, all_person_list: &Vec<(u64, Person)>, item_list: &Vec<StashItemTag>) -> Result<()> {
+    let new_all_person_list: Vec<(u64, Person)> = all_person_list.into_iter().map(|info| {
+        let (_id, _person) = info;
+        let id: u64 = _id.clone();
+        let mut new_person: Person = _person.clone();
+
+
+        new_person.backpack_item_list.extend(item_list.to_owned());
+
+        (id, new_person)
+    }).collect();
+
+    for data in new_all_person_list.into_iter() {
+        save_person_to_file(path, data.0, &data.1);
+    }
 
     Ok(())
 }

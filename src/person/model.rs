@@ -1,13 +1,13 @@
 use serde::{Serialize, Deserialize};
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct StashItemTag {
     pub class: i8,
     pub index: i32,
     pub key: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ItemTag {
     pub slot: i8,
     pub index: i32,
@@ -15,14 +15,14 @@ pub struct ItemTag {
     pub key: String,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct OrderTag {
     pub moving: i32,
     pub target: String,
     pub class: i8,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Person {
     pub max_authority_reached: f32,
     pub authority: f32,
@@ -61,6 +61,32 @@ impl Default for Person {
             item_list: vec![],
             backpack_item_list: vec![],
             stash_item_list: vec![],
+        }
+    }
+}
+
+impl From<&Person> for Person {
+    fn from(p: &Person) -> Self {
+        Person {
+            max_authority_reached: p.max_authority_reached,
+            authority: p.authority,
+            job_points: p.job_points,
+            faction: p.faction.to_owned(),
+            name: p.name.to_owned(),
+            version: p.version.to_owned(),
+            alive: p.alive,
+            soldier_group_id: p.soldier_group_id,
+            soldier_group_name: p.soldier_group_name.to_owned(),
+            block: p.block.to_owned(),
+            squad_size_setting: p.squad_size_setting,
+            order: OrderTag {
+                moving: p.order.moving,
+                class: p.order.class,
+                target: p.order.target.to_owned(),
+            },
+            item_list: p.item_list.to_vec(),
+            backpack_item_list: p.backpack_item_list.to_vec(),
+            stash_item_list: p.stash_item_list.to_vec()
         }
     }
 }
