@@ -67,7 +67,24 @@ pub fn save_person(p: &Person) -> Result<String> {
 
     let backpack_tag = BytesStart::owned(b"backpack".to_owned(), "backpack".len());
 
-    writer.write_event(Event::Empty(backpack_tag))?;
+    if p.backpack_item_list.len() == 0 {
+        writer.write_event(Event::Empty(backpack_tag))?;
+    } else {
+        writer.write_event(Event::Start(backpack_tag))?;
+
+        for item in p.backpack_item_list.iter() {
+            let mut backpack_item_tag = BytesStart::owned(b"item".to_owned(), "item".len());
+
+            backpack_item_tag.push_attribute(("class", item.class.to_string().as_str()));
+            backpack_item_tag.push_attribute(("index", item.index.to_string().as_str()));
+            backpack_item_tag.push_attribute(("key", item.key.as_str()));
+
+            writer.write_event(Event::Empty(backpack_item_tag))?;
+        }
+
+        writer.write_event(Event::End(BytesEnd::borrowed(b"backpack")))?;
+    }
+
 
     writer.write_event(Event::End(BytesEnd::borrowed(b"person")))?;
 

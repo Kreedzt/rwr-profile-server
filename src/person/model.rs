@@ -39,8 +39,8 @@ pub struct Person {
 
     pub order: OrderTag,
     pub item_list: Vec<ItemTag>,
+    pub backpack_item_list: Vec<StashItemTag>,
     pub stash_item_list: Vec<StashItemTag>,
-    // pub backpack:
 }
 
 impl Default for Person {
@@ -59,6 +59,7 @@ impl Default for Person {
             squad_size_setting: 0.0,
             order: OrderTag::default(),
             item_list: vec![],
+            backpack_item_list: vec![],
             stash_item_list: vec![],
         }
     }

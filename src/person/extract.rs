@@ -16,6 +16,7 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
 
     let mut is_in_person = false;
     let mut is_in_stash = false;
+    let mut is_in_backpack = false;
 
     loop {
         match reader.read_event(&mut buf) {
@@ -77,6 +78,10 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
                         is_in_stash = true;
                         println!("This is stash");
                     }
+                    b"backpack" => {
+                        is_in_backpack = true;
+                        println!("This is backpack");
+                    }
                     _ => (),
                 }
             }
@@ -116,7 +121,37 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
                         person.order = order_item;
                     }
                     b"item" => {
-                        if is_in_stash {
+                        if is_in_backpack {
+                            let mut backpack_item = StashItemTag::default();
+
+                            for attr in e.attributes() {
+                                let attr_unwrap_res = attr?;
+                                let attr_value =
+                                    attr_unwrap_res.unescape_and_decode_value(&reader)?;
+                                let attr_key = attr_unwrap_res.key;
+
+                                println!(
+                                    "attr: {}, value: {}",
+                                    str::from_utf8(attr_key)?,
+                                    attr_value
+                                );
+
+                                match attr_key {
+                                    b"class" => {
+                                        backpack_item.class = attr_value.parse()?;
+                                    }
+                                    b"index" => {
+                                        backpack_item.index = attr_value.parse()?;
+                                    }
+                                    b"key" => {
+                                        backpack_item.key = attr_value.parse()?;
+                                    }
+                                    _ => (),
+                                }
+                            }
+
+                            person.backpack_item_list.push(backpack_item);
+                        } else if is_in_stash {
                             let mut stash_item = StashItemTag::default();
 
                             for attr in e.attributes() {
