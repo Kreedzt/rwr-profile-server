@@ -1,12 +1,10 @@
 use anyhow::{anyhow, Result};
+use quick_xml::{events::Event, Reader};
 use std::fs;
 use std::io;
-use quick_xml::{events::Event, Reader};
 use tracing::info;
 
-pub fn extract_profile_list() {
-
-}
+pub fn extract_profile_list() {}
 
 pub fn get_user_profile_id(username: &str, profile_path: &str) -> Result<u64> {
     let entries = fs::read_dir(profile_path)?
@@ -35,36 +33,34 @@ pub fn get_user_profile_id(username: &str, profile_path: &str) -> Result<u64> {
 
         loop {
             match reader.read_event(&mut buf) {
-                Ok(Event::Start(e)) => {
-                    match e.name() {
-                        b"profile" => {
-                            for attr in e.attributes() {
-                                let attr_unwrap_res = attr?;
-                                let attr_value =
-                                    attr_unwrap_res.unescape_and_decode_value(&reader)?;
-                                let attr_key = attr_unwrap_res.key;
+                Ok(Event::Start(e)) => match e.name() {
+                    b"profile" => {
+                        for attr in e.attributes() {
+                            let attr_unwrap_res = attr?;
+                            let attr_value = attr_unwrap_res.unescape_and_decode_value(&reader)?;
+                            let attr_key = attr_unwrap_res.key;
 
-                                match attr_key {
-                                    b"username" => {
-                                        if attr_value == username {
-                                            info!("found username: {}, id: {}", username, last_path);
-                                            let last_path_name: Vec<&str> = last_path.split(".").collect();
-                                            if let Some(id_str) = last_path_name.first() {
-                                                let parse_res = id_str.parse::<u64>()?;
-                                                return Ok(parse_res);
-                                            }
+                            match attr_key {
+                                b"username" => {
+                                    if attr_value == username {
+                                        info!("found username: {}, id: {}", username, last_path);
+                                        let last_path_name: Vec<&str> =
+                                            last_path.split(".").collect();
+                                        if let Some(id_str) = last_path_name.first() {
+                                            let parse_res = id_str.parse::<u64>()?;
+                                            return Ok(parse_res);
                                         }
-                                    },
-                                    _ => {}
+                                    }
                                 }
+                                _ => {}
                             }
-                        },
-                        _ => {}
+                        }
                     }
+                    _ => {}
                 },
                 Ok(Event::Eof) => {
                     break;
-                },
+                }
                 _ => {}
             }
         }

@@ -1,10 +1,12 @@
-use actix_web::{HttpResponse, Responder, get, post, web};
-use tracing::{error, instrument};
-use tracing::log::{info};
-use crate::{AppData};
 use crate::model::ResponseJson;
 use crate::user::model::{LoginReq, RegisterReq, User};
-use crate::user::utils::{get_user_info, get_user_json_data, register_user, update_user_list, validate_user};
+use crate::user::utils::{
+    get_user_info, get_user_json_data, register_user, update_user_list, validate_user,
+};
+use crate::AppData;
+use actix_web::{get, post, web, HttpResponse, Responder};
+use tracing::log::info;
+use tracing::{error, instrument};
 
 pub fn user_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -12,7 +14,7 @@ pub fn user_config(cfg: &mut web::ServiceConfig) {
             .service(register)
             .service(login)
             .service(get_user)
-            .service(get_all_user)
+            .service(get_all_user),
     );
 }
 
@@ -33,39 +35,41 @@ async fn register(config: web::Data<AppData>, user: web::Json<RegisterReq>) -> i
                         name: user.username.clone(),
                         password: user.password.clone(),
                         user_id: id,
-                        admin: 0
+                        admin: 0,
                     });
 
-                    match update_user_list(user_json_data.user_list, &config.server_data_folder_path) {
+                    match update_user_list(
+                        user_json_data.user_list,
+                        &config.server_data_folder_path,
+                    ) {
                         Ok(_) => {
-                            info!("user: {}, profile_id: {} register successful", user.username, id);
-                            HttpResponse::Ok().json(ResponseJson::default()
-                                .set_successful_msg("register successful"))
-                        },
-                        Err(e) => {
-                            error!("{:?}", e);
-                            HttpResponse::BadRequest().json(
-                                ResponseJson::default()
-                                    .set_err_msg(&e.to_string())
+                            info!(
+                                "user: {}, profile_id: {} register successful",
+                                user.username, id
+                            );
+                            HttpResponse::Ok().json(
+                                ResponseJson::default().set_successful_msg("register successful"),
                             )
                         }
+                        Err(e) => {
+                            error!("{:?}", e);
+                            HttpResponse::BadRequest()
+                                .json(ResponseJson::default().set_err_msg(&e.to_string()))
+                        }
                     }
-                },
+                }
                 Err(e) => {
                     error!("{:?}", e);
-                    HttpResponse::BadRequest().json(
-                        ResponseJson::default()
-                            .set_err_msg(&e.to_string()))
+                    HttpResponse::BadRequest()
+                        .json(ResponseJson::default().set_err_msg(&e.to_string()))
                 }
             }
-        },
+        }
         Err(err) => {
             error!("register, error: {:?}", err);
-            HttpResponse::BadRequest().json(
-                ResponseJson::default()
-                    .set_err_msg(&err.to_string()))
-        },
-    }
+            HttpResponse::BadRequest().json(ResponseJson::default().set_err_msg(&err.to_string()))
+        }
+    };
 }
 
 #[instrument]
@@ -73,24 +77,25 @@ async fn register(config: web::Data<AppData>, user: web::Json<RegisterReq>) -> i
 async fn login(config: web::Data<AppData>, info: web::Json<LoginReq>) -> impl Responder {
     config.user_json_lock.lock();
 
-    match validate_user(&info.username, &info.password, &config.server_data_folder_path) {
+    match validate_user(
+        &info.username,
+        &info.password,
+        &config.server_data_folder_path,
+    ) {
         Ok(_) => {
             return match get_user_info(&info.username, &config.server_data_folder_path) {
-                Ok(res) => {
-                    HttpResponse::Ok().json(res)
-                },
+                Ok(res) => HttpResponse::Ok().json(res),
                 Err(e) => {
                     error!("{:?}", e);
-                    HttpResponse::BadRequest().json(
-                        ResponseJson::default()
-                            .set_err_msg(&e.to_string()))                }
+                    HttpResponse::BadRequest()
+                        .json(ResponseJson::default().set_err_msg(&e.to_string()))
+                }
             }
         }
         Err(e) => {
             error!("{:?}", e);
-            HttpResponse::BadRequest().json(
-                ResponseJson::default()
-                    .set_err_msg(&e.to_string()))        }
+            HttpResponse::BadRequest().json(ResponseJson::default().set_err_msg(&e.to_string()))
+        }
     }
 }
 

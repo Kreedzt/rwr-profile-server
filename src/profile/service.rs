@@ -1,18 +1,18 @@
-use actix_web::{HttpResponse, Responder, get, post, web};
+use crate::AppData;
+use actix_web::{get, post, web, HttpResponse, Responder};
 use tracing::instrument;
-use crate::{AppData};
 
 pub fn profile_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/profile")
             .service(query_profile)
-            .service(update_profile)
+            .service(update_profile),
     );
 }
 
 #[instrument]
 #[get("/query/{id}")]
-async fn query_profile(config: web::Data<AppData>,id: web::Path<(u64,)>) -> impl Responder {
+async fn query_profile(config: web::Data<AppData>, id: web::Path<(u64,)>) -> impl Responder {
     HttpResponse::Ok().body("query profile")
 }
 

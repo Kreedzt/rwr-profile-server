@@ -1,7 +1,7 @@
 use crate::person::model::{ItemTag, OrderTag, Person, StashItemTag};
-use quick_xml::{events::Event, Reader};
 use anyhow::Result;
-use std::{str, fs, io};
+use quick_xml::{events::Event, Reader};
+use std::{fs, io, str};
 use tracing::info;
 
 pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
@@ -29,8 +29,7 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
 
                         for attr in e.attributes() {
                             let attr_unwrap_res = attr?;
-                            let attr_value =
-                                attr_unwrap_res.unescape_and_decode_value(&reader)?;
+                            let attr_value = attr_unwrap_res.unescape_and_decode_value(&reader)?;
                             let attr_key = attr_unwrap_res.key;
 
                             match attr_key {
@@ -95,15 +94,10 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
 
                         for attr in e.attributes() {
                             let attr_unwrap_res = attr?;
-                            let attr_value =
-                                attr_unwrap_res.unescape_and_decode_value(&reader)?;
+                            let attr_value = attr_unwrap_res.unescape_and_decode_value(&reader)?;
                             let attr_key = attr_unwrap_res.key;
 
-                            println!(
-                                "attr: {}, value: {}",
-                                str::from_utf8(attr_key)?,
-                                attr_value
-                            );
+                            println!("attr: {}, value: {}", str::from_utf8(attr_key)?, attr_value);
 
                             match attr_key {
                                 b"moving" => {

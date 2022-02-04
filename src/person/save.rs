@@ -1,10 +1,10 @@
 use super::model::Person;
-use quick_xml::events::{BytesEnd, BytesStart, Event, BytesText};
+use crate::person::model::StashItemTag;
 use anyhow::Result;
+use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::Writer;
 use std::io::{Cursor, Write};
 use tracing::{error, warn};
-use crate::person::model::StashItemTag;
 
 pub fn save_person(p: &Person) -> Result<String> {
     let mut writer = Writer::new_with_indent(Cursor::new(Vec::new()), b' ', 4);
@@ -36,7 +36,6 @@ pub fn save_person(p: &Person) -> Result<String> {
     order_tag.push_attribute(("moving", p.order.moving.to_string().as_str()));
     order_tag.push_attribute(("target", p.order.target.to_string().as_str()));
     order_tag.push_attribute(("class", p.order.class.to_string().as_str()));
-
 
     writer.write_event(Event::Empty(order_tag))?;
 
@@ -87,7 +86,6 @@ pub fn save_person(p: &Person) -> Result<String> {
         writer.write_event(Event::End(BytesEnd::borrowed(b"backpack")))?;
     }
 
-
     writer.write_event(Event::End(BytesEnd::borrowed(b"person")))?;
 
     let result = String::from_utf8(writer.into_inner().into_inner())?;
@@ -107,17 +105,23 @@ pub fn save_person_to_file(path: &str, id: u64, person: &Person) -> Result<()> {
     Ok(())
 }
 
-pub fn insert_all_person_backpack_to_file(path: &str, all_person_list: &Vec<(u64, Person)>, item_list: &Vec<StashItemTag>) -> Result<()> {
-    let new_all_person_list: Vec<(u64, Person)> = all_person_list.into_iter().map(|info| {
-        let (_id, _person) = info;
-        let id: u64 = _id.clone();
-        let mut new_person: Person = _person.clone();
+pub fn insert_all_person_backpack_to_file(
+    path: &str,
+    all_person_list: &Vec<(u64, Person)>,
+    item_list: &Vec<StashItemTag>,
+) -> Result<()> {
+    let new_all_person_list: Vec<(u64, Person)> = all_person_list
+        .into_iter()
+        .map(|info| {
+            let (_id, _person) = info;
+            let id: u64 = _id.clone();
+            let mut new_person: Person = _person.clone();
 
+            new_person.backpack_item_list.extend(item_list.to_owned());
 
-        new_person.backpack_item_list.extend(item_list.to_owned());
-
-        (id, new_person)
-    }).collect();
+            (id, new_person)
+        })
+        .collect();
 
     for data in new_all_person_list.into_iter() {
         save_person_to_file(path, data.0, &data.1);

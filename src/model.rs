@@ -22,13 +22,12 @@ pub struct ResponseJson {
     pub message: String,
 }
 
-
 impl Default for ResponseJson {
     fn default() -> Self {
         Self {
             status: 200,
             code: 0,
-            message: String::from("ok")
+            message: String::from("ok"),
         }
     }
 }
@@ -46,7 +45,7 @@ impl ResponseJson {
         Self {
             status: 400,
             code: -1,
-            message: String::from(msg)
+            message: String::from(msg),
         }
     }
 
@@ -54,7 +53,7 @@ impl ResponseJson {
         Self {
             status: 200,
             code: 0,
-            message: String::from(msg)
+            message: String::from(msg),
         }
     }
 }

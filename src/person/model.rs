@@ -1,4 +1,4 @@
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct StashItemTag {
@@ -86,7 +86,7 @@ impl From<&Person> for Person {
             },
             item_list: p.item_list.to_vec(),
             backpack_item_list: p.backpack_item_list.to_vec(),
-            stash_item_list: p.stash_item_list.to_vec()
+            stash_item_list: p.stash_item_list.to_vec(),
         }
     }
 }
@@ -124,10 +124,10 @@ impl Default for StashItemTag {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdatePersonReq {
-    pub person: Person
+    pub person: Person,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct GroupInfo {
-    pub group_type: String
+    pub group_type: String,
 }

@@ -1,19 +1,20 @@
-use std::sync::Mutex;
-use actix_web::{App, HttpServer, web};
-use tracing::info;
-use tracing_subscriber::{filter::LevelFilter, prelude::*};
-use tracing_appender::rolling;
-use anyhow::{Result, Error};
 use crate::model::{AppData, Config};
 use crate::person::service::person_config;
 use crate::profile::service::profile_config;
 use crate::user::service::user_config;
+use actix_web::{web, App, HttpServer};
+use anyhow::{Error, Result};
+use std::sync::Mutex;
+use tracing::info;
+use tracing_appender::rolling;
+use tracing_subscriber::{filter::LevelFilter, prelude::*};
 
-mod user;
+mod constant;
 mod init;
 mod model;
-mod profile;
 mod person;
+mod profile;
+mod user;
 
 #[actix_web::main]
 async fn main() -> Result<()> {
@@ -25,7 +26,7 @@ async fn main() -> Result<()> {
         server_data_folder_path: config.server_data_folder_path,
         rwr_profile_folder_path: config.rwr_profile_folder_path,
         server_log_folder_path: config.server_log_folder_path,
-        user_json_lock: Mutex::new(0)
+        user_json_lock: Mutex::new(0),
     });
 
     let file_appender = rolling::daily(&server_log_folder_path, "info.log");
@@ -55,8 +56,8 @@ async fn main() -> Result<()> {
             .configure(profile_config)
             .configure(person_config)
     })
-        .bind("127.0.0.1:8080")?
-        .run()
-        .await
-        .map_err(Error::msg)
+    .bind("127.0.0.1:8080")?
+    .run()
+    .await
+    .map_err(Error::msg)
 }
