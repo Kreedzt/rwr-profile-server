@@ -4,7 +4,7 @@
 
 > 该项目依赖前端运行，对应前端：https://github.com/Kreedzt/rwr-profile-web
 
-下载前端构建后代码，然后下载本项目[构建后代码](https://github.com/Kreedzt/rwr-profile-web/releases)，配合 nginx 托管，并从命令行启动该项目即可
+下载前端[构建后代码](https://github.com/Kreedzt/rwr-profile-server/releases)，然后下载本项目[构建后代码](https://github.com/Kreedzt/rwr-profile-server/releases)，配合 nginx 托管，并从命令行启动该项目即可
 
 ## 构建
 
@@ -70,4 +70,4 @@ server {
 
 ## 协议
 
-- GPL
+- [GPLv3](https://opensource.org/licenses/GPL-3.0)
