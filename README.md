@@ -4,7 +4,7 @@
 
 > 该项目依赖前端运行，对应前端：https://github.com/Kreedzt/rwr-profile-web
 
-下载前端[构建后代码](https://github.com/Kreedzt/rwr-profile-server/releases)，然后下载本项目[构建后代码](https://github.com/Kreedzt/rwr-profile-server/releases)，配合 nginx 托管，并放置 `config.json` 文件和 `users.json` 文件，最后从命令行启动该项目即可
+下载前端[构建后代码](https://github.com/Kreedzt/rwr-profile-web/releases)，然后下载本项目[构建后代码](https://github.com/Kreedzt/rwr-profile-server/releases)，配合 nginx 托管，并放置 `config.json` 文件和 `users.json` 文件，最后从命令行启动该项目即可
 
 `config.json`(需要与该项目同目录):
 ```json5
@@ -37,6 +37,19 @@
 }
 ```
 
+## 开发
+> 该项目提供了前端界面, 可用前端界面来进行开发调试: https://github.com/Kreedzt/rwr-profile-web
+
+该项目采用 Rust 语言编写，需要 [Rust](https://www.rust-lang.org/) 开发环境
+
+启动开发环境的命令:
+
+``` sh
+cargo run
+```
+
+会绑定在 `8080` 端口工作
+
 ## 构建
 
 该项目采用 Rust 语言编写，需要 [Rust](https://www.rust-lang.org/) 开发环境
@@ -59,7 +72,7 @@ upx --best --lzma target/release/rwr-profile-server
 - 用户接口
   + 提供基本的注册与登录
 - 经验管理接口
-  + 经验重置到5星人形
+  + 经验重置到星人形5
 - 仓库管理接口
   + 仓库更新
 - 改造管理接口
