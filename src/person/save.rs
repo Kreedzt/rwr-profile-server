@@ -1,4 +1,5 @@
 use super::model::Person;
+use crate::constant::MAX_BACKPACK_LEN;
 use crate::person::model::StashItemTag;
 use anyhow::Result;
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
@@ -117,6 +118,12 @@ pub fn insert_all_person_backpack_to_file(
             let id: u64 = _id.clone();
             let mut new_person: Person = _person.clone();
 
+            // 若超出, 终止操作
+            if new_person.backpack_item_list.len() + item_list.len() > MAX_BACKPACK_LEN.into() {
+                error!("person id: {} backpack over 255", id);
+                return (id, new_person);
+            }
+
             new_person.backpack_item_list.extend(item_list.to_owned());
 
             (id, new_person)
@@ -124,7 +131,7 @@ pub fn insert_all_person_backpack_to_file(
         .collect();
 
     for data in new_all_person_list.into_iter() {
-        save_person_to_file(path, data.0, &data.1);
+        save_person_to_file(path, data.0, &data.1)?;
     }
 
     Ok(())
