@@ -1,4 +1,7 @@
-use crate::person::model::{ItemTag, OrderTag, Person, StashItemTag};
+use crate::{
+    person::model::{ItemTag, OrderTag, Person, StashItemTag},
+    profile::{extract::extract_profile, model::Profile},
+};
 use anyhow::Result;
 use quick_xml::{events::Event, Reader};
 use std::{fs, io, str};
@@ -255,6 +258,41 @@ pub fn extract_all_person(folder_path: &str) -> Result<Vec<(u64, Person)>> {
         let person = extract_person(id, folder_path)?;
 
         v.push((id, person));
+    }
+
+    Ok(v)
+}
+
+pub fn extract_all_person_and_profiles(folder_path: &str) -> Result<Vec<(u64, Person, Profile)>> {
+    let mut v: Vec<(u64, Person, Profile)> = Vec::new();
+
+    let entries = fs::read_dir(folder_path)?
+        .map(|res| res.map(|e| e.path()))
+        .filter(|path| {
+            path.as_ref()
+                .unwrap()
+                .display()
+                .to_string()
+                .ends_with(".profile")
+        })
+        .collect::<Result<Vec<_>, io::Error>>()?;
+
+    for path in entries.into_iter() {
+        let reader_path = path.into_os_string().into_string().unwrap();
+
+        let path_string = reader_path.clone();
+        let path_list = path_string.split("\\").collect::<Vec<_>>();
+
+        let last_path = path_list.last().unwrap();
+        let last_list = last_path.split(".").collect::<Vec<_>>();
+        let id: u64 = last_list.first().unwrap().parse()?;
+
+        info!("extract item: {} / {}", id, last_path);
+        let person = extract_person(id, folder_path)?;
+
+        let profile = extract_profile(id, folder_path)?;
+
+        v.push((id, person, profile));
     }
 
     Ok(v)

@@ -131,3 +131,9 @@ pub struct UpdatePersonReq {
 pub struct GroupInfo {
     pub group_type: String,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct InsertSelectedPersonBackpackReq {
+    pub profile_id_list: Vec<u64>,
+    pub backpack_item_list: Vec<StashItemTag>,
+}

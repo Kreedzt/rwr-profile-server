@@ -1,11 +1,14 @@
-use super::model::{Person, StashItemTag, UpdatePersonReq};
+use super::model::{InsertSelectedPersonBackpackReq, Person, StashItemTag, UpdatePersonReq};
 use crate::constant::{MAX_BACKPACK_LEN, MAX_STASH_LEN};
 use crate::model::ResponseJson;
-use crate::person::extract::{extract_all_person, extract_person};
+use crate::person::extract::{extract_all_person, extract_all_person_and_profiles, extract_person};
 use crate::person::model::GroupInfo;
-use crate::person::save::{insert_all_person_backpack_to_file, save_person_to_file};
+use crate::person::save::{
+    insert_all_person_backpack_to_file, insert_selected_person_backpack_to_file,
+    save_person_to_file,
+};
 use crate::{AppData, Config};
-use actix_web::{get, post, web, HttpResponse, Responder};
+use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
 use tracing::instrument;
 use tracing::log::{error, info};
 
@@ -13,12 +16,14 @@ pub fn person_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/person")
             .service(query_person)
+            .service(query_all_person)
             .service(update_person)
             .service(reset_xp_5_starts)
             .service(update_backpack)
             .service(update_stash)
             .service(update_group_type)
-            .service(insert_all_person_backpack),
+            .service(insert_all_person_backpack)
+            .service(insert_selected_person_backpack),
     );
 }
 
@@ -248,6 +253,50 @@ async fn insert_all_person_backpack(
             error!("update all person backpack error {:?}", err);
             HttpResponse::BadRequest()
                 .json(ResponseJson::default().set_err_msg("update all person backpack error"))
+        }
+    };
+}
+
+#[instrument]
+#[post("/insert_selected_person_backpack")]
+async fn insert_selected_person_backpack(
+    config: web::Data<AppData>,
+    data: web::Json<InsertSelectedPersonBackpackReq>,
+) -> impl Responder {
+    info!("");
+
+    let insert_data_pre = data.into_inner();
+
+    let backpack_list = insert_data_pre.backpack_item_list;
+    let profile_id_list = insert_data_pre.profile_id_list;
+
+    return match insert_selected_person_backpack_to_file(
+        &config.rwr_profile_folder_path,
+        &profile_id_list,
+        &backpack_list,
+    ) {
+        Ok(res) => HttpResponse::Ok().json(
+            ResponseJson::default()
+                .set_successful_msg("insert_selected person backpack to file success"),
+        ),
+        Err(err) => {
+            error!("insert selected person backpack error: {:?}", err);
+            HttpResponse::BadRequest()
+                .json(ResponseJson::default().set_err_msg("query all person error"))
+        }
+    };
+}
+
+#[instrument]
+#[get("/query_all")]
+async fn query_all_person(config: web::Data<AppData>) -> impl Responder {
+    info!("");
+    return match extract_all_person_and_profiles(&config.rwr_profile_folder_path) {
+        Ok(all_person_and_profiles_list) => HttpResponse::Ok().json(all_person_and_profiles_list),
+        Err(err) => {
+            error!("query all person error: {:?}", err);
+            HttpResponse::BadRequest()
+                .json(ResponseJson::default().set_err_msg("query all person error"))
         }
     };
 }
