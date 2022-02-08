@@ -56,6 +56,8 @@ async fn update_person(
     let query_id = id.into_inner().0;
     let source = extract_person(query_id, &config.rwr_profile_folder_path);
 
+    info!("update person success, query id: {:?}, source {:?}", query_id, source);
+
     HttpResponse::Ok().json(ResponseJson::default())
 }
 
@@ -238,10 +240,16 @@ async fn insert_all_person_backpack(
                 &all_person_list,
                 &insert_backpack_item_list,
             ) {
-                Ok(()) => HttpResponse::Ok().json(
-                    ResponseJson::default()
-                        .set_successful_msg("update all person backpack successful"),
-                ),
+                Ok(()) => {
+                    info!(
+                        "inser all person backpack success, backpack_item_list: {:?}",
+                        insert_backpack_item_list
+                    );
+                    HttpResponse::Ok().json(
+                        ResponseJson::default()
+                            .set_successful_msg("update all person backpack successful"),
+                    )
+                }
                 Err(err) => {
                     error!("insert all person backpack to file person error {:?}", err);
                     HttpResponse::BadRequest()
@@ -275,10 +283,13 @@ async fn insert_selected_person_backpack(
         &profile_id_list,
         &backpack_list,
     ) {
-        Ok(res) => HttpResponse::Ok().json(
-            ResponseJson::default()
-                .set_successful_msg("insert_selected person backpack to file success"),
-        ),
+        Ok(res) => {
+            info!("insert selected person backpack success, profile_id_list: {:?}, backpack_list: {:?}", profile_id_list, backpack_list);
+            HttpResponse::Ok().json(
+                ResponseJson::default()
+                    .set_successful_msg("insert_selected person backpack to file success"),
+            )
+        }
         Err(err) => {
             error!("insert selected person backpack error: {:?}", err);
             HttpResponse::BadRequest()
@@ -292,7 +303,10 @@ async fn insert_selected_person_backpack(
 async fn query_all_person(config: web::Data<AppData>) -> impl Responder {
     info!("");
     return match extract_all_person_and_profiles(&config.rwr_profile_folder_path) {
-        Ok(all_person_and_profiles_list) => HttpResponse::Ok().json(all_person_and_profiles_list),
+        Ok(all_person_and_profiles_list) => {
+            info!("query all peron res {:?}", all_person_and_profiles_list);
+            HttpResponse::Ok().json(all_person_and_profiles_list)
+        }
         Err(err) => {
             error!("query all person error: {:?}", err);
             HttpResponse::BadRequest()

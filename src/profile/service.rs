@@ -1,6 +1,6 @@
-use crate::AppData;
+use crate::{model::ResponseJson, profile::extract::extract_profile, AppData};
 use actix_web::{get, post, web, HttpResponse, Responder};
-use tracing::instrument;
+use tracing::{error, info, instrument};
 
 pub fn profile_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -13,7 +13,20 @@ pub fn profile_config(cfg: &mut web::ServiceConfig) {
 #[instrument]
 #[get("/query/{id}")]
 async fn query_profile(config: web::Data<AppData>, id: web::Path<(u64,)>) -> impl Responder {
-    HttpResponse::Ok().body("query profile")
+    info!("");
+
+    let res = extract_profile(id.into_inner().0, &config.rwr_profile_folder_path);
+
+    match res {
+        Ok(profile) => {
+            info!("query res, profile: {:?}", profile);
+            HttpResponse::Ok().json(profile)
+        }
+        Err(err) => {
+            error!("extract error {:?}", err);
+            HttpResponse::NotFound().json(ResponseJson::default().set_err_msg(&err.to_string()))
+        }
+    }
 }
 
 #[instrument]
