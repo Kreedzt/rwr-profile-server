@@ -7,10 +7,11 @@ use crate::person::save::{
     insert_all_person_backpack_to_file, insert_selected_person_backpack_to_file,
     save_person_to_file,
 };
-use crate::{AppData, Config};
-use actix_web::{get, post, web, HttpRequest, HttpResponse, Responder};
+use crate::{AppData};
+use actix_web::{get, post, web, Result, HttpResponse, Responder};
 use tracing::instrument;
 use tracing::log::{error, info};
+use actix_files::{NamedFile};
 
 pub fn person_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -23,7 +24,8 @@ pub fn person_config(cfg: &mut web::ServiceConfig) {
             .service(update_stash)
             .service(update_group_type)
             .service(insert_all_person_backpack)
-            .service(insert_selected_person_backpack),
+            .service(insert_selected_person_backpack)
+            .service(download_person)
     );
 }
 
@@ -313,4 +315,23 @@ async fn query_all_person(config: web::Data<AppData>) -> impl Responder {
                 .json(ResponseJson::default().set_err_msg("query all person error"))
         }
     };
+}
+
+#[instrument]
+#[get("/download/{id}")]
+async fn download_person(config: web::Data<AppData>, id: web::Path<(u64,)>) -> Result<NamedFile> {
+    info!("");
+
+    let id: u64 = id.into_inner().0;
+    let path = format!("{}/{}.person", &config.rwr_profile_folder_path, id);
+
+    Ok(NamedFile::open(path).map_err(|err| {
+        let err_msg = format!("download {} person error: {}", id, err.to_string());
+        error!("{}", err_msg);
+
+        let custom_err = ResponseJson::default().set_err_msg(&err_msg);
+
+        HttpResponse::BadRequest()
+            .json(custom_err)
+    })?)
 }

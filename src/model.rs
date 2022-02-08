@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use actix_web::{dev::HttpResponseBuilder};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {
@@ -57,3 +58,14 @@ impl ResponseJson {
         }
     }
 }
+
+// impl actix_web::error::ResponseError for ResponseJson {
+//     fn error_response(&self) -> actix_web::HttpResponse {
+//         HttpResponseBuilder::new(self.status_code())
+//             .json(self)
+//     }
+
+//     fn status_code(&self) -> actix_web::http::StatusCode {
+//         actix_web::http::StatusCode::BAD_REQUEST
+//     }
+// }
