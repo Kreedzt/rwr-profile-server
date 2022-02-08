@@ -11,7 +11,9 @@ use crate::{AppData};
 use actix_web::{get, post, web, Result, HttpResponse, Responder};
 use tracing::instrument;
 use tracing::log::{error, info};
-use actix_files::{NamedFile};
+use actix_files::{NamedFile, HttpRange};
+use actix_multipart::Multipart;
+use futures_util::TryStreamExt as _;
 
 pub fn person_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -26,6 +28,7 @@ pub fn person_config(cfg: &mut web::ServiceConfig) {
             .service(insert_all_person_backpack)
             .service(insert_selected_person_backpack)
             .service(download_person)
+            .service(upload_person)
     );
 }
 
@@ -334,4 +337,31 @@ async fn download_person(config: web::Data<AppData>, id: web::Path<(u64,)>) -> R
         HttpResponse::BadRequest()
             .json(custom_err)
     })?)
+}
+
+
+#[instrument]
+#[post("/upload/{id}")]
+async fn upload_person(config: web::Data<AppData>) -> impl Responder {
+    info!("");
+
+    // while let Some(mut field) = payload.try_next().await? {
+    //     // A multipart/form-data stream has to contain `content_disposition`
+    //     let content_disposition = field.content_disposition();
+
+    //     let filename = content_disposition
+    //         .get_filename().map_or_else(|| "temp-person.person");
+    //     let filepath = format!("./tmp/{}", filename);
+
+    //     // File::create is blocking operation, use threadpool
+    //     let mut f = web::block(|| std::fs::File::create(filepath)).await??;
+
+    //     // Field in turn is stream of *Bytes* object
+    //     while let Some(chunk) = field.try_next().await? {
+    //         // filesystem operations are blocking, we have to use threadpool
+    //         f = web::block(move || f.write_all(&chunk).map(|_| f)).await??;
+    //     }
+    // }
+
+    HttpResponse::Ok()
 }
