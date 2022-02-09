@@ -14,7 +14,9 @@
   // 服务器数据目录，不能为空，路径必须存在 users.json
   "server_data_folder_path": "temp/data",
   // 服务器日志目录
-  "server_log_folder_path": "temp/logs"
+  "server_log_folder_path": "temp/logs",
+  // 服务器上传存档临时目录，目标路径必须存在
+  "server_upload_temp_folder_path": "temp/upload_temp"
 }
 ```
 
@@ -69,9 +71,9 @@ upx --best --lzma target/release/rwr-profile-server
 
 ## 特性
 
-- 用户接口
+- 用户接口（user）
   + 提供基本的注册与登录
-- 玩家数据接口
+- 玩家数据接口（person）
   + 查询单条玩家信息
   + 更新单条玩家信息
   + 查询所有玩家信息
@@ -82,8 +84,10 @@ upx --best --lzma target/release/rwr-profile-server
   + 为所有玩家背包插入指定物品
   + 为选定玩家背包插入指定物品
   + 下载存档
-- 玩家记录信息接口
+  + 上传存档
+- 玩家记录信息接口（profile）
   + 下载存档
+  + 上传存档
 
 ## 部署
 
@@ -126,7 +130,9 @@ server {
   // 服务器数据目录，不能为空，路径必须存在 users.json
   "server_data_folder_path": "temp/data",
   // 服务器日志目录
-  "server_log_folder_path": "temp/logs"
+  "server_log_folder_path": "temp/logs",
+  // 服务器上传存档临时目录，目标路径必须存在
+  "server_upload_temp_folder_path": "temp/upload_temp"
 }
 ```
 
