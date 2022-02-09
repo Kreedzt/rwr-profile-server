@@ -8,12 +8,17 @@ use crate::person::save::{
     save_person_to_file,
 };
 use crate::{AppData};
+use actix_web::dev::Service;
 use actix_web::{get, post, web, Result, HttpResponse, Responder};
 use tracing::instrument;
 use tracing::log::{error, info};
 use actix_files::{NamedFile, HttpRange};
 use actix_multipart::Multipart;
-use futures_util::TryStreamExt as _;
+use std::io::Write;
+use std::ops::Add;
+use anyhow::anyhow;
+use std::sync::{Arc, Mutex};
+use futures_util::{TryStreamExt as _, TryFutureExt};
 
 pub fn person_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -49,6 +54,24 @@ async fn query_person(config: web::Data<AppData>, id: web::Path<(u64,)>) -> impl
         }
     }
 }
+
+#[instrument]
+#[get("/query_all")]
+async fn query_all_person(config: web::Data<AppData>) -> impl Responder {
+    info!("");
+    return match extract_all_person_and_profiles(&config.rwr_profile_folder_path) {
+        Ok(all_person_and_profiles_list) => {
+            info!("query all peron res {:?}", all_person_and_profiles_list);
+            HttpResponse::Ok().json(all_person_and_profiles_list)
+        }
+        Err(err) => {
+            error!("query all person error: {:?}", err);
+            HttpResponse::BadRequest()
+                .json(ResponseJson::default().set_err_msg("query all person error"))
+        }
+    };
+}
+
 
 #[instrument]
 #[post("/update/{id}")]
@@ -304,23 +327,6 @@ async fn insert_selected_person_backpack(
 }
 
 #[instrument]
-#[get("/query_all")]
-async fn query_all_person(config: web::Data<AppData>) -> impl Responder {
-    info!("");
-    return match extract_all_person_and_profiles(&config.rwr_profile_folder_path) {
-        Ok(all_person_and_profiles_list) => {
-            info!("query all peron res {:?}", all_person_and_profiles_list);
-            HttpResponse::Ok().json(all_person_and_profiles_list)
-        }
-        Err(err) => {
-            error!("query all person error: {:?}", err);
-            HttpResponse::BadRequest()
-                .json(ResponseJson::default().set_err_msg("query all person error"))
-        }
-    };
-}
-
-#[instrument]
 #[get("/download/{id}")]
 async fn download_person(config: web::Data<AppData>, id: web::Path<(u64,)>) -> Result<NamedFile> {
     info!("");
@@ -340,28 +346,112 @@ async fn download_person(config: web::Data<AppData>, id: web::Path<(u64,)>) -> R
 }
 
 
-#[instrument]
 #[post("/upload/{id}")]
-async fn upload_person(config: web::Data<AppData>) -> impl Responder {
-    info!("");
+async fn upload_person(config: web::Data<AppData>, id: web::Path<(u64,)>, mut payload: Multipart) -> Result<HttpResponse, actix_web::Error> {
+    let id: u64 = id.into_inner().0;
 
-    // while let Some(mut field) = payload.try_next().await? {
-    //     // A multipart/form-data stream has to contain `content_disposition`
-    //     let content_disposition = field.content_disposition();
+    info!("in upload person service, id: {}", id);
 
-    //     let filename = content_disposition
-    //         .get_filename().map_or_else(|| "temp-person.person");
-    //     let filepath = format!("./tmp/{}", filename);
+    let mut temp_file_name = Arc::new(Mutex::new(String::new()));
 
-    //     // File::create is blocking operation, use threadpool
-    //     let mut f = web::block(|| std::fs::File::create(filepath)).await??;
+    while let Some(mut field) = payload.try_next().map_err(|err| {
+        let err_msg = format!("read {} person upload file payload try_next error: {}", id, err.to_string());
+        error!("{}", err_msg);
 
-    //     // Field in turn is stream of *Bytes* object
-    //     while let Some(chunk) = field.try_next().await? {
-    //         // filesystem operations are blocking, we have to use threadpool
-    //         f = web::block(move || f.write_all(&chunk).map(|_| f)).await??;
-    //     }
-    // }
+        let custom_err = ResponseJson::default().set_err_msg(&err_msg);
 
-    HttpResponse::Ok()
+        actix_web::error::ErrorBadRequest(serde_json::to_string(&custom_err).unwrap())
+    }).await? {
+        // A multipart/form-data stream has to contain `content_disposition`
+        let content_disposition = field.content_disposition();
+
+        if let Some(cd) = content_disposition {
+            info!("content_disposition: {:?}", cd);
+
+            let filename = cd.get_filename().unwrap_or_else(|| "temp.person");
+
+            let mut outer_file_name = Arc::clone(&temp_file_name);
+            let mut outer_file_name = outer_file_name.lock().unwrap();
+            *outer_file_name = String::from(filename);
+
+            let filepath = format!("{}/{}", &config.server_upload_temp_folder_path, &filename);
+            info!("filepath: {}", filepath);
+
+            // File::create is blocking operation, use threadpool
+            let mut f = web::block(|| std::fs::File::create(filepath)).map_err(|err| {
+                let err_msg = format!("create {} person file by upload error: {}", id, err.to_string());
+                error!("{}", err_msg);
+
+                let custom_err = ResponseJson::default().set_err_msg(&err_msg);
+
+                actix_web::error::ErrorBadRequest(serde_json::to_string(&custom_err).unwrap())
+            }).await?;
+
+            // Field in turn is stream of *Bytes* object
+            while let Some(chunk) = field.try_next().map_err(|err| {
+                let err_msg = format!("read {} person upload file field try_next error: {}", id, err.to_string());
+                error!("{}", err_msg);
+
+                let custom_err = ResponseJson::default().set_err_msg(&err_msg);
+
+                actix_web::error::ErrorBadRequest(serde_json::to_string(&custom_err).unwrap())
+            }).await? {
+                // filesystem operations are blocking, we have to use threadpool
+                f = web::block(move || f.write_all(&chunk).map(|_| f)).map_err(|err| {
+                    let err_msg = format!("write {} person upload file chunk error: {}", id, err.to_string());
+                    error!("{}", err_msg);
+
+                    let custom_err = ResponseJson::default().set_err_msg(&err_msg);
+
+                    actix_web::error::ErrorBadRequest(serde_json::to_string(&custom_err).unwrap())
+                }).await?;
+            }
+        }
+    }
+
+    let temp_file_name = temp_file_name.lock().unwrap();
+    info!("Ready to validate filename: {}", &temp_file_name);
+
+    return match extract_person(id, &config.server_upload_temp_folder_path) {
+        Ok(person) => {
+            if person.backpack_item_list.len() > MAX_BACKPACK_LEN.into() {
+                let custom_err = ResponseJson::default().set_err_msg("person backpack over 255");
+
+                return Ok(HttpResponse::BadRequest().json(custom_err))
+            }
+
+            if person.stash_item_list.len() > MAX_STASH_LEN.into() {
+                let custom_err = ResponseJson::default().set_err_msg("person stash over 300");
+
+                return Ok(HttpResponse::BadRequest().json(custom_err))
+            }
+
+            let from_path = format!("{}/{}", &config.server_upload_temp_folder_path, temp_file_name);
+            let target_path = format!("{}/{}", &config.rwr_profile_folder_path, temp_file_name);
+
+            return match std::fs::copy(from_path, target_path) {
+                Ok(_) => {
+                    Ok(HttpResponse::Ok().json(ResponseJson::default().set_successful_msg("upload & replace person success")).into())
+                }
+                Err(err) => {
+                    let err_msg = format!("extract {} person error: {}", id, err.to_string());
+                    error!("{}", err);
+
+                    let custom_err = ResponseJson::default().set_err_msg(&err_msg);
+
+                    Ok(HttpResponse::BadRequest().json(custom_err))
+                }
+            }
+
+        }
+        Err(err) => {
+            let err_msg = format!("extract {} person error: {}", id, err.to_string());
+            error!("{}", err);
+
+            let custom_err = ResponseJson::default().set_err_msg(&err_msg);
+
+            Ok(HttpResponse::BadRequest().json(custom_err))
+        }
+    }
+
 }

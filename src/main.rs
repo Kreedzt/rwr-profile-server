@@ -26,6 +26,7 @@ async fn main() -> Result<()> {
         server_data_folder_path: config.server_data_folder_path,
         rwr_profile_folder_path: config.rwr_profile_folder_path,
         server_log_folder_path: config.server_log_folder_path,
+        server_upload_temp_folder_path: config.server_upload_temp_folder_path,
         user_json_lock: Mutex::new(0),
     });
 
