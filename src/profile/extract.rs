@@ -42,6 +42,59 @@ pub fn extract_profile(id: u64, folder_path: &str) -> Result<Profile> {
                         }
                     }
                 }
+                b"stats" => {
+                    for attr in e.attributes() {
+                        let attr_unwrap_res = attr?;
+                        let attr_value = attr_unwrap_res.unescape_and_decode_value(&reader)?;
+                        let attr_key = attr_unwrap_res.key;
+
+                        match attr_key {
+                            b"kills" => {
+                                profile.stats.kills = attr_value.parse().unwrap();
+                            }
+                            b"deaths" => {
+                                profile.stats.deaths = attr_value.parse().unwrap();
+                            }
+                            b"time_played" => {
+                                profile.stats.time_played = attr_value.parse().unwrap();
+                            }
+                            b"player_kills" => {
+                                profile.stats.player_kills = attr_value.parse().unwrap();
+                            }
+                            b"team_kills" => {
+                                profile.stats.team_kills = attr_value.parse().unwrap();
+                            }
+                            b"longest_kill_streak" => {
+                                profile.stats.longest_kill_streak = attr_value.parse().unwrap();
+                            }
+                            b"targets_destroyed" => {
+                                profile.stats.targets_destroyed = attr_value.parse().unwrap();
+                            }
+                            b"vehicles_destroyed" => {
+                                profile.stats.vehicles_destroyed = attr_value.parse().unwrap();
+                            }
+                            b"soldiers_healed" => {
+                                profile.stats.soldiers_healed = attr_value.parse().unwrap();
+                            }
+                            b"times_got_healed" => {
+                                profile.stats.times_got_healed = attr_value.parse().unwrap();
+                            }
+                            b"distance_moved" => {
+                                profile.stats.distance_moved = attr_value.parse().unwrap();
+                            }
+                            b"shots_fired" => {
+                                profile.stats.shots_fired = attr_value.parse().unwrap();
+                            }
+                            b"throwables_thrown" => {
+                                profile.stats.throwables_thrown = attr_value.parse().unwrap();
+                            }
+                            b"rank_progression" => {
+                                profile.stats.rank_progression = attr_value.parse().unwrap();
+                            }
+                            _ => (),
+                        }
+                    }
+                }
                 _ => (),
             },
             Ok(Event::Empty(e)) => {}
