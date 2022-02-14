@@ -27,3 +27,5 @@ tracing-appender = "0.2"
 actix-files = "0.5.0"
 actix-multipart = "0.3.0"
 futures-util = "0.3.21"
+futures = "0.3.21"
+tokio = { version = "1.16.1", features = ["full"] }
