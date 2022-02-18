@@ -11,7 +11,7 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
     let mut person = Person::default();
 
     let path = format!("{}/{}.person", folder_path, id);
-    info!("in extract_person read path: {}", path);
+    // info!("in extract_person read path: {}", path);
 
     let mut reader = Reader::from_file(path)?;
 
@@ -76,21 +76,21 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
                                 _ => (),
                             }
                         }
-                        println!("This is person");
+                        // println!("This is person");
                     }
                     b"stash" => {
                         is_in_stash = true;
-                        println!("This is stash");
+                        // println!("This is stash");
                     }
                     b"backpack" => {
                         is_in_backpack = true;
-                        println!("This is backpack");
+                        // println!("This is backpack");
                     }
                     _ => (),
                 }
             }
             Ok(Event::Empty(e)) => {
-                println!("empty e.name: {:?}", str::from_utf8(e.name())?);
+                // println!("empty e.name: {:?}", str::from_utf8(e.name())?);
 
                 match e.name() {
                     b"order" => {
@@ -101,7 +101,7 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
                             let attr_value = attr_unwrap_res.unescape_and_decode_value(&reader)?;
                             let attr_key = attr_unwrap_res.key;
 
-                            println!("attr: {}, value: {}", str::from_utf8(attr_key)?, attr_value);
+                            // println!("attr: {}, value: {}", str::from_utf8(attr_key)?, attr_value);
 
                             match attr_key {
                                 b"moving" => {
@@ -129,11 +129,11 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
                                     attr_unwrap_res.unescape_and_decode_value(&reader)?;
                                 let attr_key = attr_unwrap_res.key;
 
-                                println!(
-                                    "attr: {}, value: {}",
-                                    str::from_utf8(attr_key)?,
-                                    attr_value
-                                );
+                                // println!(
+                                //     "attr: {}, value: {}",
+                                //     str::from_utf8(attr_key)?,
+                                //     attr_value
+                                // );
 
                                 match attr_key {
                                     b"class" => {
@@ -159,11 +159,11 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
                                     attr_unwrap_res.unescape_and_decode_value(&reader)?;
                                 let attr_key = attr_unwrap_res.key;
 
-                                println!(
-                                    "attr: {}, value: {}",
-                                    str::from_utf8(attr_key)?,
-                                    attr_value
-                                );
+                                // println!(
+                                //     "attr: {}, value: {}",
+                                //     str::from_utf8(attr_key)?,
+                                //     attr_value
+                                // );
 
                                 match attr_key {
                                     b"class" => {
@@ -189,11 +189,11 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
                                     attr_unwrap_res.unescape_and_decode_value(&reader)?;
                                 let attr_key = attr_unwrap_res.key;
 
-                                println!(
-                                    "attr: {}, value: {}",
-                                    str::from_utf8(attr_key)?,
-                                    attr_value
-                                );
+                                // println!(
+                                //     "attr: {}, value: {}",
+                                //     str::from_utf8(attr_key)?,
+                                //     attr_value
+                                // );
 
                                 match attr_key {
                                     b"slot" => {
@@ -255,7 +255,7 @@ pub fn extract_all_person(folder_path: &str) -> Result<Vec<(u64, Person)>> {
         let last_list = last_path.split(".").collect::<Vec<_>>();
         let id: u64 = last_list.first().unwrap().parse()?;
 
-        info!("extract item: {} / {}", id, last_path);
+        // info!("extract item: {} / {}", id, last_path);
         let person = extract_person(id, folder_path)?;
 
         v.push((id, person));
@@ -288,7 +288,7 @@ pub fn extract_all_person_and_profiles(folder_path: &str) -> Result<Vec<(u64, Pe
         let last_list = last_path.split(".").collect::<Vec<_>>();
         let id: u64 = last_list.first().unwrap().parse()?;
 
-        info!("extract item: {} / {}", id, last_path);
+        // info!("extract item: {} / {}", id, last_path);
         let person = extract_person(id, folder_path)?;
 
         let profile = extract_profile(id, folder_path)?;

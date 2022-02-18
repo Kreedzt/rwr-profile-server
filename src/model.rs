@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use actix_web::{dev::HttpResponseBuilder};
 
 #[derive(Deserialize, Debug, Clone)]
 pub struct Config {

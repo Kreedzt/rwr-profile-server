@@ -1,6 +1,7 @@
 use super::model::{InsertSelectedPersonBackpackReq, Person, StashItemTag, UpdatePersonReq};
 use crate::constant::{MAX_BACKPACK_LEN, MAX_STASH_LEN};
 use crate::model::ResponseJson;
+use crate::person::async_extract::async_extract_all_person_and_profiles;
 use crate::person::extract::{extract_all_person, extract_all_person_and_profiles, extract_person};
 use crate::person::model::GroupInfo;
 use crate::person::save::{
@@ -59,6 +60,11 @@ async fn query_person(config: web::Data<AppData>, id: web::Path<(u64,)>) -> impl
 #[get("/query_all")]
 async fn query_all_person(config: web::Data<AppData>) -> impl Responder {
     info!("");
+
+    // FIXME 等待修复运行时
+    // let cloned_folder_path = config.rwr_profile_folder_path.clone();
+    // async_extract_all_person_and_profiles(cloned_folder_path).await;
+
     return match extract_all_person_and_profiles(&config.rwr_profile_folder_path) {
         Ok(all_person_and_profiles_list) => {
             info!("query all peron res {:?}", all_person_and_profiles_list);
@@ -342,7 +348,11 @@ async fn download_person(config: web::Data<AppData>, id: web::Path<(u64,)>) -> R
 
         HttpResponse::BadRequest()
             .json(custom_err)
-    })?)
+    }).map_err(|e| {
+        error!("download {} person file error: {:?}", id, e);
+        HttpResponse::BadRequest()
+            .json(ResponseJson::default().set_err_msg("download person error"))
+    }).unwrap())
 }
 
 
@@ -354,60 +364,88 @@ async fn upload_person(config: web::Data<AppData>, id: web::Path<(u64,)>, mut pa
 
     let mut temp_file_name = Arc::new(Mutex::new(String::new()));
 
-    while let Some(mut field) = payload.try_next().map_err(|err| {
-        let err_msg = format!("read {} person upload file payload try_next error: {}", id, err.to_string());
-        error!("{}", err_msg);
-
-        let custom_err = ResponseJson::default().set_err_msg(&err_msg);
-
-        actix_web::error::ErrorBadRequest(serde_json::to_string(&custom_err).unwrap())
-    }).await? {
+    // iterate over multipart stream
+    while let Some(mut field) = payload.try_next().await? {
         // A multipart/form-data stream has to contain `content_disposition`
         let content_disposition = field.content_disposition();
 
-        if let Some(cd) = content_disposition {
-            info!("content_disposition: {:?}", cd);
+        let filename = content_disposition
+            .get_filename()
+            .unwrap();
+            // .map_or_else(|| "temp.person");
 
-            let filename = cd.get_filename().unwrap_or_else(|| "temp.person");
 
-            let mut outer_file_name = Arc::clone(&temp_file_name);
-            let mut outer_file_name = outer_file_name.lock().unwrap();
-            *outer_file_name = String::from(filename);
+        let mut outer_file_name = Arc::clone(&temp_file_name);
+        let mut outer_file_name = outer_file_name.lock().unwrap();
+        *outer_file_name = String::from(filename);
 
-            let filepath = format!("{}/{}", &config.server_upload_temp_folder_path, &filename);
-            info!("filepath: {}", filepath);
+        let filepath = format!("{}/{}", &config.server_upload_temp_folder_path, &filename);
+        info!("filepath: {}", filepath);
 
-            // File::create is blocking operation, use threadpool
-            let mut f = web::block(|| std::fs::File::create(filepath)).map_err(|err| {
-                let err_msg = format!("create {} person file by upload error: {}", id, err.to_string());
-                error!("{}", err_msg);
+        // File::create is blocking operation, use threadpool
+        let mut f = web::block(|| std::fs::File::create(filepath)).await??;
 
-                let custom_err = ResponseJson::default().set_err_msg(&err_msg);
-
-                actix_web::error::ErrorBadRequest(serde_json::to_string(&custom_err).unwrap())
-            }).await?;
-
-            // Field in turn is stream of *Bytes* object
-            while let Some(chunk) = field.try_next().map_err(|err| {
-                let err_msg = format!("read {} person upload file field try_next error: {}", id, err.to_string());
-                error!("{}", err_msg);
-
-                let custom_err = ResponseJson::default().set_err_msg(&err_msg);
-
-                actix_web::error::ErrorBadRequest(serde_json::to_string(&custom_err).unwrap())
-            }).await? {
-                // filesystem operations are blocking, we have to use threadpool
-                f = web::block(move || f.write_all(&chunk).map(|_| f)).map_err(|err| {
-                    let err_msg = format!("write {} person upload file chunk error: {}", id, err.to_string());
-                    error!("{}", err_msg);
-
-                    let custom_err = ResponseJson::default().set_err_msg(&err_msg);
-
-                    actix_web::error::ErrorBadRequest(serde_json::to_string(&custom_err).unwrap())
-                }).await?;
-            }
+        // Field in turn is stream of *Bytes* object
+        while let Some(chunk) = field.try_next().await? {
+            // filesystem operations are blocking, we have to use threadpool
+            f = web::block(move || f.write_all(&chunk).map(|_| f)).await??;
         }
     }
+
+    // while let Some(mut field) = payload.try_next().map_err(|err| {
+    //     let err_msg = format!("read {} person upload file payload try_next error: {}", id, err.to_string());
+    //     error!("{}", err_msg);
+
+    //     let custom_err = ResponseJson::default().set_err_msg(&err_msg);
+
+    //     actix_web::error::ErrorBadRequest(serde_json::to_string(&custom_err).unwrap())
+    // }).await? {
+    //     // A multipart/form-data stream has to contain `content_disposition`
+    //     let content_disposition = field.content_disposition();
+
+    //     if let Some(cd) = content_disposition {
+    //         info!("content_disposition: {:?}", cd);
+
+    //         let filename = cd.get_filename().unwrap_or_else(|| "temp.person");
+
+    //         let mut outer_file_name = Arc::clone(&temp_file_name);
+    //         let mut outer_file_name = outer_file_name.lock().unwrap();
+    //         *outer_file_name = String::from(filename);
+
+    //         let filepath = format!("{}/{}", &config.server_upload_temp_folder_path, &filename);
+    //         info!("filepath: {}", filepath);
+
+    //         // File::create is blocking operation, use threadpool
+    //         let mut f = web::block(|| std::fs::File::create(filepath)).map_err(|err| {
+    //             let err_msg = format!("create {} person file by upload error: {}", id, err.to_string());
+    //             error!("{}", err_msg);
+
+    //             let custom_err = ResponseJson::default().set_err_msg(&err_msg);
+
+    //             actix_web::error::ErrorBadRequest(serde_json::to_string(&custom_err).unwrap())
+    //         }).await?;
+
+    //         // Field in turn is stream of *Bytes* object
+    //         while let Some(chunk) = field.try_next().map_err(|err| {
+    //             let err_msg = format!("read {} person upload file field try_next error: {}", id, err.to_string());
+    //             error!("{}", err_msg);
+
+    //             let custom_err = ResponseJson::default().set_err_msg(&err_msg);
+
+    //             actix_web::error::ErrorBadRequest(serde_json::to_string(&custom_err).unwrap())
+    //         }).await? {
+    //             // filesystem operations are blocking, we have to use threadpool
+    //             f = web::block(move || f.write_all(&chunk).map(|_| f)).map_err(|err| {
+    //                 let err_msg = format!("write {} person upload file chunk error: {}", id, err.to_string());
+    //                 error!("{}", err_msg);
+
+    //                 let custom_err = ResponseJson::default().set_err_msg(&err_msg);
+
+    //                 actix_web::error::ErrorBadRequest(serde_json::to_string(&custom_err).unwrap())
+    //             }).await?;
+    //         }
+    //     }
+    // }
 
     let temp_file_name = temp_file_name.lock().unwrap();
     info!("Ready to validate filename: {}", &temp_file_name);

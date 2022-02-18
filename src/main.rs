@@ -8,6 +8,7 @@ use std::sync::Mutex;
 use tracing::info;
 use tracing_appender::rolling;
 use tracing_subscriber::{filter::LevelFilter, prelude::*};
+use tokio;
 
 mod constant;
 mod init;
@@ -16,7 +17,8 @@ mod person;
 mod profile;
 mod user;
 
-#[actix_web::main]
+// #[actix_web::main]
+#[tokio::main]
 async fn main() -> Result<()> {
     let config = init::init_config()?;
 
