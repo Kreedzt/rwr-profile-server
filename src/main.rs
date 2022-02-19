@@ -5,10 +5,10 @@ use crate::user::service::user_config;
 use actix_web::{web, App, HttpServer};
 use anyhow::{Error, Result};
 use std::sync::Mutex;
+use tokio;
 use tracing::info;
 use tracing_appender::rolling;
 use tracing_subscriber::{filter::LevelFilter, prelude::*};
-use tokio;
 
 mod constant;
 mod init;

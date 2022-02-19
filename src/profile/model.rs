@@ -15,7 +15,7 @@ pub struct Stats {
     pub distance_moved: f64,
     pub shots_fired: u64,
     pub throwables_thrown: u64,
-    pub rank_progression: f64
+    pub rank_progression: f64,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -26,8 +26,7 @@ pub struct Profile {
     pub rid: String,
     pub squad_tag: String,
     pub color: String,
-    pub stats: Stats
-    // TODO: 暂时只解析到此
+    pub stats: Stats, // TODO: 暂时只解析到此
 }
 
 impl Default for Stats {
@@ -46,7 +45,7 @@ impl Default for Stats {
             distance_moved: 0.0,
             shots_fired: 0,
             throwables_thrown: 0,
-            rank_progression: 0.0
+            rank_progression: 0.0,
         }
     }
 }
@@ -60,7 +59,7 @@ impl Default for Profile {
             rid: String::new(),
             squad_tag: String::new(),
             color: String::new(),
-            stats: Stats::default()
+            stats: Stats::default(),
         }
     }
 }

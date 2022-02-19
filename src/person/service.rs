@@ -8,17 +8,17 @@ use crate::person::save::{
     insert_all_person_backpack_to_file, insert_selected_person_backpack_to_file,
     save_person_to_file,
 };
-use crate::{AppData};
-use actix_web::dev::Service;
-use actix_web::{get, post, web, Result, HttpResponse, Responder};
-use tracing::{instrument, info, error};
-use actix_files::{NamedFile, HttpRange};
+use crate::AppData;
+use actix_files::{HttpRange, NamedFile};
 use actix_multipart::Multipart;
+use actix_web::dev::Service;
+use actix_web::{get, post, web, HttpResponse, Responder, Result};
+use anyhow::anyhow;
+use futures_util::{TryFutureExt, TryStreamExt as _};
 use std::io::Write;
 use std::ops::Add;
-use anyhow::anyhow;
 use std::sync::{Arc, Mutex};
-use futures_util::{TryStreamExt as _, TryFutureExt};
+use tracing::{error, info, instrument};
 
 pub fn person_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -33,7 +33,7 @@ pub fn person_config(cfg: &mut web::ServiceConfig) {
             .service(insert_all_person_backpack)
             .service(insert_selected_person_backpack)
             .service(download_person)
-            .service(upload_person)
+            .service(upload_person),
     );
 }
 
@@ -74,7 +74,6 @@ async fn query_all_person(config: web::Data<AppData>) -> impl Responder {
     };
 }
 
-
 #[instrument]
 #[post("/update/{id}")]
 async fn update_person(
@@ -86,7 +85,10 @@ async fn update_person(
     let query_id = id.into_inner().0;
     let source = extract_person(query_id, &config.rwr_profile_folder_path);
 
-    info!("update person success, query id: {:?}, source {:?}", query_id, source);
+    info!(
+        "update person success, query id: {:?}, source {:?}",
+        query_id, source
+    );
 
     HttpResponse::Ok().json(ResponseJson::default())
 }
@@ -336,24 +338,30 @@ async fn download_person(config: web::Data<AppData>, id: web::Path<(u64,)>) -> R
     let id: u64 = id.into_inner().0;
     let path = format!("{}/{}.person", &config.rwr_profile_folder_path, id);
 
-    Ok(NamedFile::open_async(path).await.map_err(|err| {
-        let err_msg = format!("download {} person error: {}", id, err.to_string());
-        error!("{}", err_msg);
+    Ok(NamedFile::open_async(path)
+        .await
+        .map_err(|err| {
+            let err_msg = format!("download {} person error: {}", id, err.to_string());
+            error!("{}", err_msg);
 
-        let custom_err = ResponseJson::default().set_err_msg(&err_msg);
+            let custom_err = ResponseJson::default().set_err_msg(&err_msg);
 
-        HttpResponse::BadRequest()
-            .json(custom_err)
-    }).map_err(|e| {
-        error!("download {} person file error: {:?}", id, e);
-        HttpResponse::BadRequest()
-            .json(ResponseJson::default().set_err_msg("download person error"))
-    }).unwrap())
+            HttpResponse::BadRequest().json(custom_err)
+        })
+        .map_err(|e| {
+            error!("download {} person file error: {:?}", id, e);
+            HttpResponse::BadRequest()
+                .json(ResponseJson::default().set_err_msg("download person error"))
+        })
+        .unwrap())
 }
 
-
 #[post("/upload/{id}")]
-async fn upload_person(config: web::Data<AppData>, id: web::Path<(u64,)>, mut payload: Multipart) -> Result<HttpResponse, actix_web::Error> {
+async fn upload_person(
+    config: web::Data<AppData>,
+    id: web::Path<(u64,)>,
+    mut payload: Multipart,
+) -> Result<HttpResponse, actix_web::Error> {
     let id: u64 = id.into_inner().0;
 
     info!("in upload person service, id: {}", id);
@@ -365,11 +373,8 @@ async fn upload_person(config: web::Data<AppData>, id: web::Path<(u64,)>, mut pa
         // A multipart/form-data stream has to contain `content_disposition`
         let content_disposition = field.content_disposition();
 
-        let filename = content_disposition
-            .get_filename()
-            .unwrap();
-            // .map_or_else(|| "temp.person");
-
+        let filename = content_disposition.get_filename().unwrap();
+        // .map_or_else(|| "temp.person");
 
         let mut outer_file_name = Arc::clone(&temp_file_name);
         let mut outer_file_name = outer_file_name.lock().unwrap();
@@ -451,22 +456,28 @@ async fn upload_person(config: web::Data<AppData>, id: web::Path<(u64,)>, mut pa
             if person.backpack_item_list.len() > MAX_BACKPACK_LEN.into() {
                 let custom_err = ResponseJson::default().set_err_msg("person backpack over 255");
 
-                return Ok(HttpResponse::BadRequest().json(custom_err))
+                return Ok(HttpResponse::BadRequest().json(custom_err));
             }
 
             if person.stash_item_list.len() > MAX_STASH_LEN.into() {
                 let custom_err = ResponseJson::default().set_err_msg("person stash over 300");
 
-                return Ok(HttpResponse::BadRequest().json(custom_err))
+                return Ok(HttpResponse::BadRequest().json(custom_err));
             }
 
-            let from_path = format!("{}/{}", &config.server_upload_temp_folder_path, temp_file_name);
+            let from_path = format!(
+                "{}/{}",
+                &config.server_upload_temp_folder_path, temp_file_name
+            );
             let target_path = format!("{}/{}", &config.rwr_profile_folder_path, temp_file_name);
 
             return match std::fs::copy(from_path, target_path) {
-                Ok(_) => {
-                    Ok(HttpResponse::Ok().json(ResponseJson::default().set_successful_msg("upload & replace person success")).into())
-                }
+                Ok(_) => Ok(HttpResponse::Ok()
+                    .json(
+                        ResponseJson::default()
+                            .set_successful_msg("upload & replace person success"),
+                    )
+                    .into()),
                 Err(err) => {
                     let err_msg = format!("extract {} person error: {}", id, err.to_string());
                     error!("{}", err);
@@ -475,8 +486,7 @@ async fn upload_person(config: web::Data<AppData>, id: web::Path<(u64,)>, mut pa
 
                     Ok(HttpResponse::BadRequest().json(custom_err))
                 }
-            }
-
+            };
         }
         Err(err) => {
             let err_msg = format!("extract {} person error: {}", id, err.to_string());
@@ -486,6 +496,5 @@ async fn upload_person(config: web::Data<AppData>, id: web::Path<(u64,)>, mut pa
 
             Ok(HttpResponse::BadRequest().json(custom_err))
         }
-    }
-
+    };
 }

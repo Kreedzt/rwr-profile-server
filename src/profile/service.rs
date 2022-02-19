@@ -1,11 +1,11 @@
 use crate::{model::ResponseJson, profile::extract::extract_profile, AppData};
-use actix_web::{get, post, web, Result, HttpResponse, Responder};
+use actix_files::NamedFile;
 use actix_multipart::Multipart;
-use tracing::{error, info, instrument};
-use actix_files::{NamedFile};
-use std::sync::{Arc, Mutex};
+use actix_web::{get, post, web, HttpResponse, Responder, Result};
+use futures_util::{TryFutureExt, TryStreamExt as _};
 use std::io::Write;
-use futures_util::{TryStreamExt as _, TryFutureExt};
+use std::sync::{Arc, Mutex};
+use tracing::{error, info, instrument};
 
 pub fn profile_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
@@ -13,7 +13,7 @@ pub fn profile_config(cfg: &mut web::ServiceConfig) {
             .service(query_profile)
             .service(update_profile)
             .service(download_profile)
-            .service(upload_profile)
+            .service(upload_profile),
     );
 }
 
@@ -50,35 +50,38 @@ async fn download_profile(config: web::Data<AppData>, id: web::Path<(u64,)>) -> 
     let id: u64 = id.into_inner().0;
     let path = format!("{}/{}.profile", &config.rwr_profile_folder_path, id);
 
-    Ok(NamedFile::open_async(path).await.map_err(|err| {
-        let err_msg = format!("download {} profile error: {}", id, err.to_string());
-        error!("{}", err_msg);
+    Ok(NamedFile::open_async(path)
+        .await
+        .map_err(|err| {
+            let err_msg = format!("download {} profile error: {}", id, err.to_string());
+            error!("{}", err_msg);
 
-        let custom_err = ResponseJson::default().set_err_msg(&err_msg);
+            let custom_err = ResponseJson::default().set_err_msg(&err_msg);
 
-        HttpResponse::BadRequest()
-            .json(custom_err)
-    }).unwrap())
+            HttpResponse::BadRequest().json(custom_err)
+        })
+        .unwrap())
 }
 
 #[post("/upload/{id}")]
-async fn upload_profile(config: web::Data<AppData>, id: web::Path<(u64,)>, mut payload: Multipart) -> Result<HttpResponse, actix_web::Error> {
+async fn upload_profile(
+    config: web::Data<AppData>,
+    id: web::Path<(u64,)>,
+    mut payload: Multipart,
+) -> Result<HttpResponse, actix_web::Error> {
     let id: u64 = id.into_inner().0;
 
     info!("in upload profile service, id: {}", id);
 
     let mut temp_file_name = Arc::new(Mutex::new(String::new()));
 
-        // iterate over multipart stream
+    // iterate over multipart stream
     while let Some(mut field) = payload.try_next().await? {
         // A multipart/form-data stream has to contain `content_disposition`
         let content_disposition = field.content_disposition();
 
-        let filename = content_disposition
-            .get_filename()
-            .unwrap();
-            // .map_or_else(|| "temp.person");
-
+        let filename = content_disposition.get_filename().unwrap();
+        // .map_or_else(|| "temp.person");
 
         let mut outer_file_name = Arc::clone(&temp_file_name);
         let mut outer_file_name = outer_file_name.lock().unwrap();
@@ -155,13 +158,16 @@ async fn upload_profile(config: web::Data<AppData>, id: web::Path<(u64,)>, mut p
     let temp_file_name = temp_file_name.lock().unwrap();
     info!("Ready to validate filename: {}", &temp_file_name);
 
-    let from_path = format!("{}/{}", &config.server_upload_temp_folder_path, temp_file_name);
+    let from_path = format!(
+        "{}/{}",
+        &config.server_upload_temp_folder_path, temp_file_name
+    );
     let target_path = format!("{}/{}", &config.rwr_profile_folder_path, temp_file_name);
 
     return match std::fs::copy(from_path, target_path) {
-        Ok(_) => {
-            Ok(HttpResponse::Ok().json(ResponseJson::default().set_successful_msg("upload & replace profile success")).into())
-        }
+        Ok(_) => Ok(HttpResponse::Ok()
+            .json(ResponseJson::default().set_successful_msg("upload & replace profile success"))
+            .into()),
         Err(err) => {
             let err_msg = format!("extract {} person error: {}", id, err.to_string());
             error!("{}", err);
@@ -170,5 +176,5 @@ async fn upload_profile(config: web::Data<AppData>, id: web::Path<(u64,)>, mut p
 
             Ok(HttpResponse::BadRequest().json(custom_err))
         }
-    }
+    };
 }

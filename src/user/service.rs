@@ -5,7 +5,7 @@ use crate::user::utils::{
 };
 use crate::AppData;
 use actix_web::{get, post, web, HttpResponse, Responder};
-use tracing::{error, instrument, info};
+use tracing::{error, info, instrument};
 
 pub fn user_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
