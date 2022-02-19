@@ -60,11 +60,8 @@ async fn query_person(config: web::Data<AppData>, id: web::Path<(u64,)>) -> impl
 async fn query_all_person(config: web::Data<AppData>) -> impl Responder {
     info!("");
 
-    // FIXME 等待修复运行时
-    // let cloned_folder_path = config.rwr_profile_folder_path.clone();
-    // async_extract_all_person_and_profiles(cloned_folder_path).await;
-
-    return match extract_all_person_and_profiles(&config.rwr_profile_folder_path) {
+    let cloned_folder_path = config.rwr_profile_folder_path.clone();
+    return match async_extract_all_person_and_profiles(cloned_folder_path).await {
         Ok(all_person_and_profiles_list) => {
             info!("query all peron res {:?}", all_person_and_profiles_list);
             HttpResponse::Ok().json(all_person_and_profiles_list)
