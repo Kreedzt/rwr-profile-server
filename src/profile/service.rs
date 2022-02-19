@@ -50,7 +50,7 @@ async fn download_profile(config: web::Data<AppData>, id: web::Path<(u64,)>) -> 
     let id: u64 = id.into_inner().0;
     let path = format!("{}/{}.profile", &config.rwr_profile_folder_path, id);
 
-    Ok(NamedFile::open(path).map_err(|err| {
+    Ok(NamedFile::open_async(path).await.map_err(|err| {
         let err_msg = format!("download {} profile error: {}", id, err.to_string());
         error!("{}", err_msg);
 

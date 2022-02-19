@@ -11,8 +11,7 @@ use crate::person::save::{
 use crate::{AppData};
 use actix_web::dev::Service;
 use actix_web::{get, post, web, Result, HttpResponse, Responder};
-use tracing::instrument;
-use tracing::log::{error, info};
+use tracing::{instrument, info, error};
 use actix_files::{NamedFile, HttpRange};
 use actix_multipart::Multipart;
 use std::io::Write;
@@ -340,7 +339,7 @@ async fn download_person(config: web::Data<AppData>, id: web::Path<(u64,)>) -> R
     let id: u64 = id.into_inner().0;
     let path = format!("{}/{}.person", &config.rwr_profile_folder_path, id);
 
-    Ok(NamedFile::open(path).map_err(|err| {
+    Ok(NamedFile::open_async(path).await.map_err(|err| {
         let err_msg = format!("download {} person error: {}", id, err.to_string());
         error!("{}", err_msg);
 
