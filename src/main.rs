@@ -17,7 +17,6 @@ mod person;
 mod profile;
 mod user;
 
-// #[actix_web::main]
 #[tokio::main]
 async fn main() -> Result<()> {
     let config = init::init_config()?;

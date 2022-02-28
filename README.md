@@ -63,7 +63,7 @@ cargo build --release
 
 编译后在根目录的 `target/release` 内生成二进制文件（exe），该文件可用终端直接运行。
 
-编译后可用 [upx](https://github.com/upx/upx) 二次缩小体积，通常缩小到 700k 左右
+编译后可用 [upx](https://github.com/upx/upx) 二次缩小体积，通常缩小到 800k 左右
 
 ```bash
 upx --best --lzma target/release/rwr-profile-server
