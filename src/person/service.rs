@@ -3,7 +3,7 @@ use crate::constant::{MAX_BACKPACK_LEN, MAX_STASH_LEN};
 use crate::model::ResponseJson;
 use crate::person::async_extract::async_extract_all_person_and_profiles;
 use crate::person::extract::{extract_all_person, extract_all_person_and_profiles, extract_person};
-use crate::person::model::GroupInfo;
+use crate::person::model::{GroupInfo, ResetXpReq};
 use crate::person::save::{
     insert_all_person_backpack_to_file, insert_selected_person_backpack_to_file,
     save_person_to_file,
@@ -27,6 +27,7 @@ pub fn person_config(cfg: &mut web::ServiceConfig) {
             .service(query_all_person)
             .service(update_person)
             .service(reset_xp_5_starts)
+            .service(reset_xp)
             .service(update_backpack)
             .service(update_stash)
             .service(update_group_type)
@@ -105,6 +106,46 @@ async fn reset_xp_5_starts(config: web::Data<AppData>, id: web::Path<(u64,)>) ->
             let new_person = Person {
                 max_authority_reached: 11.098661,
                 authority: 11.098661,
+                ..person
+            };
+
+            info!("new_person: {:?}", new_person);
+
+            match save_person_to_file(&config.rwr_profile_folder_path, query_id, &new_person) {
+                Ok(_) => HttpResponse::Ok()
+                    .json(ResponseJson::default().set_successful_msg("update stash successful")),
+                Err(err) => {
+                    error!("save person error {:?}", err);
+                    HttpResponse::BadRequest()
+                        .json(ResponseJson::default().set_err_msg("save person error"))
+                }
+            }
+        }
+        Err(err) => {
+            error!("merge person error {:?}", err);
+            HttpResponse::BadRequest()
+                .json(ResponseJson::default().set_err_msg("save person error"))
+        }
+    };
+}
+
+#[instrument]
+#[post("/reset_xp/{id}")]
+async fn reset_xp(
+    config: web::Data<AppData>,
+    id: web::Path<(u64,)>,
+    data: web::Json<ResetXpReq>,
+) -> impl Responder {
+    info!("");
+    let query_id = id.into_inner().0;
+    let source = extract_person(query_id, &config.rwr_profile_folder_path);
+    let data: ResetXpReq = data.into_inner();
+
+    return match source {
+        Ok(person) => {
+            let new_person = Person {
+                max_authority_reached: data.authority,
+                authority: data.authority,
                 ..person
             };
 

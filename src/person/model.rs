@@ -128,6 +128,11 @@ pub struct UpdatePersonReq {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+pub struct ResetXpReq {
+    pub authority: f32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct GroupInfo {
     pub group_type: String,
 }
