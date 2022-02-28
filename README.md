@@ -78,6 +78,7 @@ upx --best --lzma target/release/rwr-profile-server
   + 更新单条玩家信息
   + 查询所有玩家信息
   + 经验重置到 5 星
+  + 经验重置到指定值
   + 更新背包
   + 更新仓库
   + 更新改造
