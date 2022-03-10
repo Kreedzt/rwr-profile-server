@@ -11,6 +11,7 @@ pub fn profile_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/profile")
             .service(query_profile)
+            .service(query_all_cache)
             .service(update_profile)
             .service(download_profile)
             .service(upload_profile),
@@ -34,6 +35,19 @@ async fn query_profile(config: web::Data<AppData>, id: web::Path<(u64,)>) -> imp
             HttpResponse::NotFound().json(ResponseJson::default().set_err_msg(&err.to_string()))
         }
     }
+}
+
+#[instrument]
+#[get("/query_all_cache")]
+async fn query_all_cache(config: web::Data<AppData>) -> impl Responder {
+    info!("");
+
+    let data = config.snapshot_data.lock().await;
+
+    let v = data.clone();
+
+    info!("query all cache successful");
+    HttpResponse::Ok().json(v)
 }
 
 #[instrument]

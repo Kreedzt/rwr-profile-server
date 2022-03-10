@@ -1,3 +1,6 @@
+use tokio::sync::Mutex;
+use super::profile::model::Profile;
+use super::person::model::Person;
 use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug, Clone)]
@@ -14,7 +17,9 @@ pub struct AppData {
     pub server_data_folder_path: String,
     pub server_log_folder_path: String,
     pub server_upload_temp_folder_path: String,
-    pub user_json_lock: std::sync::Mutex<u8>,
+    pub user_json_lock: Mutex<u8>,
+    // query_all snapshot
+    pub snapshot_data: Mutex<Vec<(u64, Person, Profile)>>
 }
 
 #[derive(Debug, Serialize, Deserialize)]

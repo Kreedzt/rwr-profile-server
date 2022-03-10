@@ -1,12 +1,12 @@
 use crate::model::{AppData, Config};
-use crate::person::service::person_config;
+use crate::person::{service::person_config, async_extract::async_extract_all_person_and_profiles};
 use crate::profile::service::profile_config;
 use crate::user::service::user_config;
 use actix_web::{web, App, HttpServer};
 use anyhow::{Error, Result};
-use std::sync::Mutex;
 use tokio;
-use tracing::info;
+use tokio::{sync::Mutex, time::{interval, Duration, Instant}};
+use tracing::{info, error};
 use tracing_appender::rolling;
 use tracing_subscriber::{filter::LevelFilter, prelude::*};
 
@@ -29,6 +29,8 @@ async fn main() -> Result<()> {
         server_log_folder_path: config.server_log_folder_path,
         server_upload_temp_folder_path: config.server_upload_temp_folder_path,
         user_json_lock: Mutex::new(0),
+        // hourly query_all
+        snapshot_data: Mutex::new(vec![])
     });
 
     let file_appender = rolling::daily(&server_log_folder_path, "info.log");
@@ -50,6 +52,31 @@ async fn main() -> Result<()> {
         .init();
 
     info!("completed reading app_data: {:?}", app_data);
+
+    let app_data_c = app_data.clone();
+
+    tokio::spawn(async move {
+        // 1 hour interval
+        let mut interval = interval(Duration::from_secs(60 * 60));
+
+
+        loop {
+            interval.tick().await;
+
+            let folder_path = app_data_c.rwr_profile_folder_path.clone();
+
+            match async_extract_all_person_and_profiles(folder_path).await {
+                Ok(all_person_and_profiles_list) => {
+                    info!("query all peron res {:?}", all_person_and_profiles_list);
+                    let mut snatshop_data = app_data_c.snapshot_data.lock().await;
+                    *snatshop_data = all_person_and_profiles_list;
+                }
+                Err(err) => {
+                    error!("query all person error: {:?}", err);
+                }
+            }
+        }
+    });
 
     HttpServer::new(move || {
         App::new()

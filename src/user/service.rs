@@ -21,7 +21,7 @@ pub fn user_config(cfg: &mut web::ServiceConfig) {
 #[post("/register")]
 async fn register(config: web::Data<AppData>, user: web::Json<RegisterReq>) -> impl Responder {
     info!("");
-    config.user_json_lock.lock();
+    config.user_json_lock.lock().await;
 
     info!("call register_us fn");
     let res = register_user(&user.username, &user.password, &config);
@@ -74,7 +74,7 @@ async fn register(config: web::Data<AppData>, user: web::Json<RegisterReq>) -> i
 #[instrument]
 #[post("/login")]
 async fn login(config: web::Data<AppData>, info: web::Json<LoginReq>) -> impl Responder {
-    config.user_json_lock.lock();
+    config.user_json_lock.lock().await;
 
     match validate_user(
         &info.username,
