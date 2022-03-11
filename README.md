@@ -156,6 +156,11 @@ server {
 }
 ```
 
+## 其他项目
+
+- [RWR GFL 存档数据可视化](https://github.com/Kreedzt/rwr-profile-visualization)
+- [RWR GFL 存档管理系统](https://github.com/Kreedzt/rwr-profile-web)
+- [RWR GFL 存档数据查询](https://github.com/Kreedzt/rwr-profile-stats)
 
 ## 协议
 
