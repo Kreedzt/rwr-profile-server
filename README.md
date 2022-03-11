@@ -89,6 +89,7 @@ upx --best --lzma target/release/rwr-profile-server
 - 玩家记录信息接口（profile）
   + 下载存档
   + 上传存档
+  + 查询所有信息缓存
 
 ## 部署
 
