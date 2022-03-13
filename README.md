@@ -89,6 +89,7 @@ upx --best --lzma target/release/rwr-profile-server
 - 玩家记录信息接口（profile）
   + 下载存档
   + 上传存档
+  + 查询所有信息缓存
 
 ## 部署
 
@@ -156,6 +157,11 @@ server {
 }
 ```
 
+## 其他项目
+
+- [RWR GFL 存档数据可视化](https://github.com/Kreedzt/rwr-profile-visualization)
+- [RWR GFL 存档管理系统](https://github.com/Kreedzt/rwr-profile-web)
+- [RWR GFL 存档数据查询](https://github.com/Kreedzt/rwr-profile-stats)
 
 ## 协议
 
