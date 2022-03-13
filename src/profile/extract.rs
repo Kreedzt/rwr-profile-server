@@ -61,7 +61,7 @@ pub fn extract_profile(id: u64, folder_path: &str) -> Result<Profile> {
                             b"player_kills" => {
                                 profile.stats.player_kills = attr_value.parse().unwrap();
                             }
-                            b"team_kills" => {
+                            b"teamkills" => {
                                 profile.stats.team_kills = attr_value.parse().unwrap();
                             }
                             b"longest_kill_streak" => {
