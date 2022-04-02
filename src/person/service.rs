@@ -1,22 +1,24 @@
-use super::model::{InsertSelectedPersonBackpackReq, Person, StashItemTag, UpdatePersonReq};
+use super::model::{
+    InsertSelectedPersonBackpackReq, Person, StashItemTag, UpdateAllPersonSoldierGroupReq,
+    UpdatePersonReq, UpdateSelectedPersonSoldierGroupReq,
+};
 use crate::constant::{MAX_BACKPACK_LEN, MAX_STASH_LEN};
 use crate::model::ResponseJson;
-use crate::person::async_extract::async_extract_all_person_and_profiles;
-use crate::person::extract::{extract_all_person, extract_all_person_and_profiles, extract_person};
-use crate::person::model::{GroupInfo, ResetXpReq};
+use crate::person::async_extract::{
+    async_extract_all_person, async_extract_all_person_and_profiles, async_extract_selected_person,
+};
+use crate::person::extract::extract_person;
+use crate::person::model::{GroupInfo, ResetXpReq, UpdatePersonSoldierGroupRes};
 use crate::person::save::{
-    insert_all_person_backpack_to_file, insert_selected_person_backpack_to_file,
-    save_person_to_file,
+    insert_person_list_backpack_to_file,
+    save_person_to_file, update_person_list_soldider_group_to_file,
 };
 use crate::AppData;
-use actix_files::{HttpRange, NamedFile};
+use actix_files::NamedFile;
 use actix_multipart::Multipart;
-use actix_web::dev::Service;
 use actix_web::{get, post, web, HttpResponse, Responder, Result};
-use anyhow::anyhow;
-use futures_util::{TryFutureExt, TryStreamExt as _};
+use futures_util::TryStreamExt as _;
 use std::io::Write;
-use std::ops::Add;
 use std::sync::{Arc, Mutex};
 use tracing::{error, info, instrument};
 
@@ -33,6 +35,8 @@ pub fn person_config(cfg: &mut web::ServiceConfig) {
             .service(update_group_type)
             .service(insert_all_person_backpack)
             .service(insert_selected_person_backpack)
+            .service(update_all_soldier_group)
+            .service(update_selected_soldier_group)
             .service(download_person)
             .service(upload_person),
     );
@@ -306,13 +310,15 @@ async fn insert_all_person_backpack(
 
     let insert_backpack_item_list = data.into_inner();
 
-    return match extract_all_person(&config.rwr_profile_folder_path) {
+    let folder_clone = config.rwr_profile_folder_path.clone();
+
+    return match async_extract_all_person(folder_clone).await {
         Ok(all_person_list) => {
-            match insert_all_person_backpack_to_file(
+            match insert_person_list_backpack_to_file(
                 &config.rwr_profile_folder_path,
                 &all_person_list,
                 &insert_backpack_item_list,
-            ) {
+            ).await {
                 Ok(()) => {
                     info!(
                         "inser all person backpack success, backpack_item_list: {:?}",
@@ -348,27 +354,125 @@ async fn insert_selected_person_backpack(
 
     let insert_data_pre = data.into_inner();
 
-    let backpack_list = insert_data_pre.backpack_item_list;
+    let insert_backpack_item_list = insert_data_pre.backpack_item_list;
     let profile_id_list = insert_data_pre.profile_id_list;
 
-    return match insert_selected_person_backpack_to_file(
-        &config.rwr_profile_folder_path,
-        &profile_id_list,
-        &backpack_list,
-    ) {
-        Ok(res) => {
-            info!("insert selected person backpack success, profile_id_list: {:?}, backpack_list: {:?}", profile_id_list, backpack_list);
-            HttpResponse::Ok().json(
-                ResponseJson::default()
-                    .set_successful_msg("insert_selected person backpack to file success"),
-            )
+    let folder_clone = config.rwr_profile_folder_path.clone();
+
+    return match async_extract_selected_person(folder_clone, profile_id_list).await {
+        Ok(all_person_list) => {
+            match insert_person_list_backpack_to_file(
+                &config.rwr_profile_folder_path,
+                &all_person_list,
+                &insert_backpack_item_list,
+            ).await {
+                Ok(()) => {
+                    info!(
+                        "inser selected person backpack success, backpack_item_list: {:?}",
+                        insert_backpack_item_list
+                    );
+                    HttpResponse::Ok().json(
+                        ResponseJson::default()
+                            .set_successful_msg("update person person backpack successful"),
+                    )
+                }
+                Err(err) => {
+                    error!("insert selected person backpack to file person error {:?}", err);
+                    HttpResponse::BadRequest()
+                        .json(ResponseJson::default().set_err_msg("save selected person error"))
+                }
+            }
         }
         Err(err) => {
-            error!("insert selected person backpack error: {:?}", err);
+            error!("update selected person backpack error {:?}", err);
             HttpResponse::BadRequest()
-                .json(ResponseJson::default().set_err_msg("query all person error"))
+                .json(ResponseJson::default().set_err_msg("update selected person backpack error"))
         }
     };
+}
+
+#[instrument]
+#[post("/update_all_person_soldier_group")]
+async fn update_all_soldier_group(
+    config: web::Data<AppData>,
+    data: web::Json<UpdateAllPersonSoldierGroupReq>,
+) -> impl Responder {
+    info!("");
+
+    let cloned_folder_path = config.rwr_profile_folder_path.clone();
+    let data: UpdateAllPersonSoldierGroupReq = data.into_inner();
+
+    return match async_extract_all_person(cloned_folder_path).await {
+        Ok(all_person_list) => {
+            match update_person_list_soldider_group_to_file(
+                &config.rwr_profile_folder_path,
+                &all_person_list,
+                &data.group,
+                data.cost,
+            )
+            .await
+            {
+                Ok(err_profile_id_list) => HttpResponse::Ok().json(UpdatePersonSoldierGroupRes {
+                    error_profile_list: err_profile_id_list,
+                }),
+                Err(err) => {
+                    error!("update all person soldider group to file error {:?}", err);
+                    HttpResponse::BadRequest().json(
+                        ResponseJson::default()
+                            .set_err_msg("update all person soldider group to file error"),
+                    )
+                }
+            }
+        }
+        Err(err) => {
+            error!("update all person soldider group error {:?}", err);
+
+            HttpResponse::BadRequest()
+                .json(ResponseJson::default().set_err_msg("update all person soldider group error"))
+        }
+    };
+}
+
+#[instrument]
+#[post("/update_selected_person_soldier_group")]
+async fn update_selected_soldier_group(
+    config: web::Data<AppData>,
+    data: web::Json<UpdateSelectedPersonSoldierGroupReq>,
+) -> impl Responder {
+    info!("");
+
+    let cloned_folder_path = config.rwr_profile_folder_path.clone();
+    let data: UpdateSelectedPersonSoldierGroupReq = data.into_inner();
+
+    return match async_extract_selected_person(cloned_folder_path, data.profile_id_list).await {
+        Ok(all_person_list) => {
+            match update_person_list_soldider_group_to_file(
+                &config.rwr_profile_folder_path,
+                &all_person_list,
+                &data.group,
+                data.cost,
+            )
+            .await
+            {
+                Ok(err_profile_id_list) => HttpResponse::Ok().json(UpdatePersonSoldierGroupRes {
+                    error_profile_list: err_profile_id_list,
+                }),
+                Err(err) => {
+                    error!("update selected person soldider group to file error {:?}", err);
+                    HttpResponse::BadRequest().json(
+                        ResponseJson::default()
+                            .set_err_msg("update selected person soldider group to file error"),
+                    )
+                }
+            }
+        }
+        Err(err) => {
+            error!("update selected person soldider group error {:?}", err);
+
+            HttpResponse::BadRequest()
+                .json(ResponseJson::default().set_err_msg("update selected person soldider group error"))
+        }
+    }
 }
 
 #[instrument]

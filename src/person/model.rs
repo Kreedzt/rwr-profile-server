@@ -142,3 +142,21 @@ pub struct InsertSelectedPersonBackpackReq {
     pub profile_id_list: Vec<u64>,
     pub backpack_item_list: Vec<StashItemTag>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateAllPersonSoldierGroupReq {
+    pub group: String,
+    pub cost: f32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UpdateSelectedPersonSoldierGroupReq {
+    pub profile_id_list: Vec<u64>,
+    pub group: String,
+    pub cost: f32,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct UpdatePersonSoldierGroupRes {
+    pub error_profile_list: Vec<u64>,
+}

@@ -83,3 +83,69 @@ pub async fn async_extract_all_person_and_profiles(folder_path: String) -> Resul
 
     Ok(res_v)
 }
+
+type ExtractPersonType = (u64, Person);
+type ExtractPersonVec = Vec<ExtractPersonType>;
+
+pub async fn async_extract_all_person(folder_path: String) -> Result<ExtractPersonVec> {
+    let entries = fs::read_dir(&folder_path)?
+        .map(|res| res.map(|e| e.path()))
+        .filter(|path| {
+            path.as_ref()
+                .unwrap()
+                .display()
+                .to_string()
+                .ends_with(".person")
+        })
+        .map(|path| {
+            let path = path.unwrap();
+            let reader_path = path.to_str().unwrap();
+
+            let path_string = String::from(reader_path);
+            let path_list = path_string.split("\\").collect::<Vec<_>>();
+
+            let last_path = path_list.last().unwrap();
+            let last_list = last_path.split(".").collect::<Vec<_>>();
+            let id: u64 = last_list.first().unwrap().parse().unwrap();
+            id
+        })
+        .collect::<Vec<u64>>();
+
+    let person_future_vec = entries
+        .clone()
+        .into_iter()
+        .map(|id| {
+            let cloned_folder_path = folder_path.clone();
+
+            return tokio::spawn(async move {
+                let person = extract_person(id, &cloned_folder_path).unwrap();
+                (id, person)
+            });
+        })
+        .collect::<Vec<_>>();
+
+    let person_vec = futures::future::try_join_all(person_future_vec).await?;
+
+    Ok(person_vec)
+}
+
+pub async fn async_extract_selected_person(
+    folder_path: String,
+    profile_id_list: Vec<u64>,
+) -> Result<ExtractPersonVec> {
+    let person_future_vec = profile_id_list
+        .into_iter()
+        .map(|id| {
+            let cloned_folder_path = folder_path.clone();
+
+            return tokio::spawn(async move {
+                let person = extract_person(id, &cloned_folder_path).unwrap();
+                (id, person)
+            });
+        })
+        .collect::<Vec<_>>();
+
+    let person_vec = futures::future::try_join_all(person_future_vec).await?;
+
+    Ok(person_vec)
+}

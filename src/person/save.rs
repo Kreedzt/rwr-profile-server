@@ -106,7 +106,7 @@ pub fn save_person_to_file(path: &str, id: u64, person: &Person) -> Result<()> {
     Ok(())
 }
 
-pub fn insert_all_person_backpack_to_file(
+pub async fn insert_person_list_backpack_to_file(
     path: &str,
     all_person_list: &Vec<(u64, Person)>,
     item_list: &Vec<StashItemTag>,
@@ -130,31 +130,64 @@ pub fn insert_all_person_backpack_to_file(
         })
         .collect();
 
-    for data in new_all_person_list.into_iter() {
-        save_person_to_file(path, data.0, &data.1)?;
-    }
+    // for data in new_all_person_list.into_iter() {
+    //     save_person_to_file(path, data.0, &data.1)?;
+    // }
+
+    let folder_path = path.to_string();
+
+
+    let future_vec = new_all_person_list.into_iter().map(|info| {
+        let cloned_folder_path = folder_path.clone();
+        return tokio::spawn(
+            async move { save_person_to_file(&cloned_folder_path, info.0, &info.1) },
+        );
+    });
+
+    futures::future::try_join_all(future_vec).await?;
 
     Ok(())
 }
 
-pub fn insert_selected_person_backpack_to_file(
+pub async fn update_person_list_soldider_group_to_file(
     path: &str,
-    profile_id_list: &Vec<u64>,
-    backpack_list: &Vec<StashItemTag>,
-) -> Result<()> {
-    for profile_id in profile_id_list {
-        let mut new_person = extract_person(*profile_id, path)?;
+    all_person_list: &Vec<(u64, Person)>,
+    group: &str,
+    cost: f32,
+) -> Result<Vec<u64>> {
+    let mut err_profile_id_vec = vec![];
 
-        // 若超出, 终止操作
-        if new_person.backpack_item_list.len() + backpack_list.len() > MAX_BACKPACK_LEN.into() {
-            error!("person id: {} backpack over 255", profile_id);
-            continue;
-        }
+    let new_all_person_list: Vec<(u64, Person)> = all_person_list
+        .into_iter()
+        .map(|info| {
+            let (_id, _person) = info;
+            let id: u64 = _id.clone();
+            let mut new_person: Person = _person.clone();
 
-        new_person.backpack_item_list.extend(backpack_list.clone());
+            // 若 RP 不足, 终止操作
+            if new_person.job_points < cost {
+                error!("person id: {} rp < cost: {}", id, cost);
+                err_profile_id_vec.push(id);
+                return (id, new_person);
+            }
 
-        save_person_to_file(path, *profile_id, &new_person)?;
-    }
+            new_person.job_points = new_person.job_points - cost;
+            new_person.soldier_group_name = group.to_string();
 
-    Ok(())
+            (id, new_person)
+        })
+        .collect();
+
+    let folder_path = path.to_string();
+
+    let future_vec = new_all_person_list.into_iter().map(|info| {
+        let cloned_folder_path = folder_path.clone();
+        return tokio::spawn(
+            async move { save_person_to_file(&cloned_folder_path, info.0, &info.1) },
+        );
+    });
+
+    futures::future::try_join_all(future_vec).await?;
+
+    Ok(err_profile_id_vec)
 }

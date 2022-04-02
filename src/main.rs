@@ -1,12 +1,15 @@
 use crate::model::{AppData, Config};
-use crate::person::{service::person_config, async_extract::async_extract_all_person_and_profiles};
+use crate::person::{async_extract::async_extract_all_person_and_profiles, service::person_config};
 use crate::profile::service::profile_config;
 use crate::user::service::user_config;
 use actix_web::{web, App, HttpServer};
 use anyhow::{Error, Result};
 use tokio;
-use tokio::{sync::Mutex, time::{interval, Duration, Instant}};
-use tracing::{info, error};
+use tokio::{
+    sync::Mutex,
+    time::{interval, Duration, Instant},
+};
+use tracing::{error, info};
 use tracing_appender::rolling;
 use tracing_subscriber::{filter::LevelFilter, prelude::*};
 
@@ -30,7 +33,7 @@ async fn main() -> Result<()> {
         server_upload_temp_folder_path: config.server_upload_temp_folder_path,
         user_json_lock: Mutex::new(0),
         // hourly query_all
-        snapshot_data: Mutex::new(vec![])
+        snapshot_data: Mutex::new(vec![]),
     });
 
     let file_appender = rolling::daily(&server_log_folder_path, "info.log");
@@ -58,7 +61,6 @@ async fn main() -> Result<()> {
     tokio::spawn(async move {
         // 1 hour interval
         let mut interval = interval(Duration::from_secs(60 * 60));
-
 
         loop {
             interval.tick().await;
