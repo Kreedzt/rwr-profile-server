@@ -47,7 +47,7 @@
 |-- logs/
 |-- upload_temp/
 |-- data/
-|--- user.json
+|--- users.json
 |- rwr-profile-server.exe
 |- config.json
 ```
