@@ -39,6 +39,19 @@
 }
 ```
 
+项目结构参考:
+
+``` text
+|- temp/
+|-- profiles/
+|-- logs/
+|-- upload_temp/
+|-- data/
+|--- user.json
+|- rwr-profile-server.exe
+|- config.json
+```
+
 ## 开发
 > 该项目提供了前端界面, 可用前端界面来进行开发调试: https://github.com/Kreedzt/rwr-profile-web
 
