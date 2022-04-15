@@ -1,3 +1,4 @@
+use crate::profile::model::QueryAllCacheV2Res;
 use crate::{model::ResponseJson, profile::extract::extract_profile, AppData};
 use actix_files::NamedFile;
 use actix_multipart::Multipart;
@@ -12,6 +13,7 @@ pub fn profile_config(cfg: &mut web::ServiceConfig) {
         web::scope("/profile")
             .service(query_profile)
             .service(query_all_cache)
+            .service(query_all_cache_v2)
             .service(update_profile)
             .service(download_profile)
             .service(upload_profile),
@@ -48,6 +50,23 @@ async fn query_all_cache(config: web::Data<AppData>) -> impl Responder {
 
     info!("query all cache successful");
     HttpResponse::Ok().json(v)
+}
+
+#[instrument]
+#[get("/query_all_cache_v2")]
+async fn query_all_cache_v2(config: web::Data<AppData>) -> impl Responder {
+    info!("");
+
+    let list_str = config.snapshot_str.lock().await;
+    let snapshot_time = config.snapshot_time.lock().await;
+
+    let res = QueryAllCacheV2Res {
+        all_person_list_str: list_str.clone(),
+        snapshot_time: snapshot_time.clone()
+    };
+
+    info!("query all cache successful");
+    HttpResponse::Ok().json(res)
 }
 
 #[instrument]

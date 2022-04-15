@@ -20,6 +20,10 @@ pub struct AppData {
     pub user_json_lock: Mutex<u8>,
     // query_all snapshot
     pub snapshot_data: Mutex<Vec<(u64, Person, Profile)>>,
+    // cache string
+    pub snapshot_str: Mutex<String>,
+    // cache time
+    pub snapshot_time: Mutex<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

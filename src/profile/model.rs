@@ -29,6 +29,12 @@ pub struct Profile {
     pub stats: Stats, // TODO: 暂时只解析到此
 }
 
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct QueryAllCacheV2Res {
+    pub all_person_list_str: String,
+    pub snapshot_time: String
+}
+
 impl Default for Stats {
     fn default() -> Self {
         Self {

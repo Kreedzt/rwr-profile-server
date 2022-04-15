@@ -12,6 +12,7 @@ use tokio::{
 use tracing::{error, info};
 use tracing_appender::rolling;
 use tracing_subscriber::{filter::LevelFilter, prelude::*};
+use chrono::prelude::*;
 
 mod constant;
 mod init;
@@ -34,6 +35,8 @@ async fn main() -> Result<()> {
         user_json_lock: Mutex::new(0),
         // hourly query_all
         snapshot_data: Mutex::new(vec![]),
+        snapshot_str: Mutex::new(String::new()),
+        snapshot_time: Mutex::new(String::new())
     });
 
     let file_appender = rolling::daily(&server_log_folder_path, "info.log");
@@ -70,8 +73,17 @@ async fn main() -> Result<()> {
             match async_extract_all_person_and_profiles(folder_path).await {
                 Ok(all_person_and_profiles_list) => {
                     info!("query all peron res {:?}", all_person_and_profiles_list);
-                    let mut snatshop_data = app_data_c.snapshot_data.lock().await;
-                    *snatshop_data = all_person_and_profiles_list;
+
+                    let mut snapshot_data = app_data_c.snapshot_data.lock().await;
+                    *snapshot_data = all_person_and_profiles_list.clone();
+
+                    let mut snapshot_str = app_data_c.snapshot_str.lock().await;
+                    *snapshot_str = serde_json::to_string(&all_person_and_profiles_list).unwrap();
+
+                    let local = Local::now();
+                    let current_time = local.format("%Y-%m-%d %H:%M:%S").to_string();
+                    let mut snapshot_time = app_data_c.snapshot_time.lock().await;
+                    *snapshot_time = current_time;
                 }
                 Err(err) => {
                     error!("query all person error: {:?}", err);
