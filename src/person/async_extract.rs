@@ -3,12 +3,8 @@ use crate::{
     person::model::{ItemTag, OrderTag, Person, StashItemTag},
     profile::{extract::extract_profile, model::Profile},
 };
-use actix_web;
 use anyhow::Result;
-use futures;
-use quick_xml::{events::Event, Reader};
-use std::sync::{Arc, Mutex};
-use std::{borrow::Borrow, fs, io, str};
+use futures::{self, FutureExt};
 use tokio;
 use tracing::info;
 
@@ -16,28 +12,22 @@ type ExtractAllType = (u64, Person, Profile);
 type ExtractAllVec = Vec<ExtractAllType>;
 
 pub async fn async_extract_all_person_and_profiles(folder_path: String) -> Result<ExtractAllVec> {
-    let entries = fs::read_dir(&folder_path)?
-        .map(|res| res.map(|e| e.path()))
-        .filter(|path| {
-            path.as_ref()
-                .unwrap()
-                .display()
-                .to_string()
-                .ends_with(".profile")
-        })
-        .map(|path| {
-            let path = path.unwrap();
-            let reader_path = path.to_str().unwrap();
+    let mut folder_entries = tokio::fs::read_dir(&folder_path).await?;
 
-            let path_string = String::from(reader_path);
-            let path_list = path_string.split("\\").collect::<Vec<_>>();
+    let mut entries: Vec<u64> = Vec::new();
 
-            let last_path = path_list.last().unwrap();
-            let last_list = last_path.split(".").collect::<Vec<_>>();
-            let id: u64 = last_list.first().unwrap().parse().unwrap();
-            id
-        })
-        .collect::<Vec<u64>>();
+    while let Some(entry) = folder_entries.next_entry().await? {
+        let file_name = entry.file_name();
+        let file_name_str = String::from(file_name.to_str().unwrap());
+
+        if file_name_str.ends_with(".profile") {
+            let vec = file_name_str.split(".").collect::<Vec<_>>();
+
+            let id: u64 = vec.first().unwrap().parse().unwrap();
+
+            entries.push(id);
+        }
+    }
 
     let mut v: ExtractAllVec = Vec::new();
 
@@ -88,28 +78,22 @@ type ExtractPersonType = (u64, Person);
 type ExtractPersonVec = Vec<ExtractPersonType>;
 
 pub async fn async_extract_all_person(folder_path: String) -> Result<ExtractPersonVec> {
-    let entries = fs::read_dir(&folder_path)?
-        .map(|res| res.map(|e| e.path()))
-        .filter(|path| {
-            path.as_ref()
-                .unwrap()
-                .display()
-                .to_string()
-                .ends_with(".person")
-        })
-        .map(|path| {
-            let path = path.unwrap();
-            let reader_path = path.to_str().unwrap();
+    let mut folder_entries = tokio::fs::read_dir(&folder_path).await?;
 
-            let path_string = String::from(reader_path);
-            let path_list = path_string.split("\\").collect::<Vec<_>>();
+    let mut entries: Vec<u64> = Vec::new();
 
-            let last_path = path_list.last().unwrap();
-            let last_list = last_path.split(".").collect::<Vec<_>>();
-            let id: u64 = last_list.first().unwrap().parse().unwrap();
-            id
-        })
-        .collect::<Vec<u64>>();
+    while let Some(entry) = folder_entries.next_entry().await? {
+        let file_name = entry.file_name();
+        let file_name_str = String::from(file_name.to_str().unwrap());
+
+        if file_name_str.ends_with(".person") {
+            let vec = file_name_str.split(".").collect::<Vec<_>>();
+
+            let id: u64 = vec.first().unwrap().parse().unwrap();
+
+            entries.push(id);
+        }
+    }
 
     let person_future_vec = entries
         .clone()
