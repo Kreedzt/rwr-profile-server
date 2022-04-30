@@ -23,9 +23,11 @@ pub async fn async_extract_all_person_and_profiles(folder_path: String) -> Resul
         if file_name_str.ends_with(".profile") {
             let vec = file_name_str.split(".").collect::<Vec<_>>();
 
-            let id: u64 = vec.first().unwrap().parse().unwrap();
+            let parse_res = vec.first().unwrap().parse();
 
-            entries.push(id);
+            if let Ok(id) = parse_res {
+                entries.push(id);
+            }
         }
     }
 

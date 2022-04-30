@@ -1053,7 +1053,7 @@ dependencies = [
 
 [[package]]
 name = "rwr-profile-server"
-version = "0.12.1"
+version = "0.12.1-beta1"
 dependencies = [
  "actix-files",
  "actix-multipart",
