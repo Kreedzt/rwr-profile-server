@@ -80,11 +80,35 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
                     }
                     b"stash" => {
                         is_in_stash = true;
-                        // println!("This is stash");
+
+                        for attr in e.attributes() {
+                            let attr_unwrap_res = attr?;
+                            let attr_value = attr_unwrap_res.unescape_and_decode_value(&reader)?;
+                            let attr_key = attr_unwrap_res.key;
+
+                            match attr_key {
+                                b"hard_capacity" => {
+                                    person.stash_hard_capacity = attr_value.parse()?;
+                                },
+                                _ => {}
+                            }
+                        }
                     }
                     b"backpack" => {
                         is_in_backpack = true;
-                        // println!("This is backpack");
+
+                        for attr in e.attributes() {
+                            let attr_unwrap_res = attr?;
+                            let attr_value = attr_unwrap_res.unescape_and_decode_value(&reader)?;
+                            let attr_key = attr_unwrap_res.key;
+
+                            match attr_key {
+                                b"hard_capacity" => {
+                                    person.backpack_hard_capacity = attr_value.parse()?;
+                                },
+                                _ => {}
+                            }
+                        }
                     }
                     _ => (),
                 }

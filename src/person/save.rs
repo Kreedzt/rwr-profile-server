@@ -1,5 +1,4 @@
 use super::model::Person;
-use crate::constant::MAX_BACKPACK_LEN;
 use crate::person::{extract::extract_person, model::StashItemTag};
 use anyhow::Result;
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
@@ -51,7 +50,10 @@ pub fn save_person(p: &Person) -> Result<String> {
         writer.write_event(Event::Empty(item_tag))?;
     }
 
-    let stash_tag = BytesStart::owned(b"stash".to_owned(), "stash".len());
+    let mut stash_tag = BytesStart::owned(b"stash".to_owned(), "stash".len());
+
+    // 1.92 新增: 仓库上限
+    stash_tag.push_attribute(("hard_capacity", p.stash_hard_capacity.to_string().as_str()));
 
     writer.write_event(Event::Start(stash_tag))?;
 
@@ -67,7 +69,10 @@ pub fn save_person(p: &Person) -> Result<String> {
 
     writer.write_event(Event::End(BytesEnd::borrowed(b"stash")))?;
 
-    let backpack_tag = BytesStart::owned(b"backpack".to_owned(), "backpack".len());
+    let mut backpack_tag = BytesStart::owned(b"backpack".to_owned(), "backpack".len());
+
+    // 1.92 新增: 仓库上限
+    backpack_tag.push_attribute(("hard_capacity", p.backpack_hard_capacity.to_string().as_str()));
 
     if p.backpack_item_list.len() == 0 {
         writer.write_event(Event::Empty(backpack_tag))?;
@@ -119,7 +124,7 @@ pub async fn insert_person_list_backpack_to_file(
             let mut new_person: Person = _person.clone();
 
             // 若超出, 终止操作
-            if new_person.backpack_item_list.len() + item_list.len() > MAX_BACKPACK_LEN.into() {
+            if new_person.backpack_item_list.len() + item_list.len() > new_person.backpack_hard_capacity.into() {
                 error!("person id: {} backpack over 255", id);
                 return (id, new_person);
             }

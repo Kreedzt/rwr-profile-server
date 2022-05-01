@@ -1,2 +1,2 @@
-pub static MAX_BACKPACK_LEN: u8 = 255;
-pub static MAX_STASH_LEN: u16 = 300;
+pub static MAX_DEFAULT_BACKPACK_LEN: u16 = 255;
+pub static MAX_DEFAULT_STASH_LEN: u16 = 300;

@@ -1,5 +1,7 @@
 use serde::{Deserialize, Serialize};
 
+use crate::constant::{MAX_DEFAULT_BACKPACK_LEN, MAX_DEFAULT_STASH_LEN};
+
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct StashItemTag {
     pub class: i8,
@@ -39,6 +41,10 @@ pub struct Person {
 
     pub order: OrderTag,
     pub item_list: Vec<ItemTag>,
+    // 1.92 新增: 背包容量
+    pub backpack_hard_capacity: u16,
+    // 1.92 新增: 仓库容量
+    pub stash_hard_capacity: u16,
     pub backpack_item_list: Vec<StashItemTag>,
     pub stash_item_list: Vec<StashItemTag>,
 }
@@ -59,6 +65,8 @@ impl Default for Person {
             squad_size_setting: 0.0,
             order: OrderTag::default(),
             item_list: vec![],
+            backpack_hard_capacity: MAX_DEFAULT_BACKPACK_LEN,
+            stash_hard_capacity: MAX_DEFAULT_STASH_LEN,
             backpack_item_list: vec![],
             stash_item_list: vec![],
         }
@@ -85,6 +93,8 @@ impl From<&Person> for Person {
                 target: p.order.target.to_owned(),
             },
             item_list: p.item_list.to_vec(),
+            backpack_hard_capacity: p.backpack_hard_capacity,
+            stash_hard_capacity: p.stash_hard_capacity,
             backpack_item_list: p.backpack_item_list.to_vec(),
             stash_item_list: p.stash_item_list.to_vec(),
         }

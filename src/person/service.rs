@@ -2,7 +2,6 @@ use super::model::{
     InsertSelectedPersonBackpackReq, Person, StashItemTag, UpdateAllPersonSoldierGroupReq,
     UpdatePersonReq, UpdateSelectedPersonSoldierGroupReq,
 };
-use crate::constant::{MAX_BACKPACK_LEN, MAX_STASH_LEN};
 use crate::model::ResponseJson;
 use crate::person::async_extract::{
     async_extract_all_person, async_extract_all_person_and_profiles, async_extract_selected_person,
@@ -191,7 +190,7 @@ async fn update_backpack(
                 ..person
             };
 
-            if new_person.backpack_item_list.len() > MAX_BACKPACK_LEN.into() {
+            if new_person.backpack_item_list.len() > new_person.backpack_hard_capacity.into() {
                 error!("backpack item over 255");
                 return HttpResponse::BadRequest()
                     .json(ResponseJson::default().set_err_msg("backpack overload 255"));
@@ -235,7 +234,7 @@ async fn update_stash(
                 ..person
             };
 
-            if new_person.stash_item_list.len() > MAX_STASH_LEN.into() {
+            if new_person.stash_item_list.len() > new_person.stash_hard_capacity.into() {
                 error!("stash item over 300");
                 return HttpResponse::BadRequest()
                     .json(ResponseJson::default().set_err_msg("stash overload 300"));
@@ -598,13 +597,13 @@ async fn upload_person(
 
     return match extract_person(id, &config.server_upload_temp_folder_path) {
         Ok(person) => {
-            if person.backpack_item_list.len() > MAX_BACKPACK_LEN.into() {
+            if person.backpack_item_list.len() > person.backpack_hard_capacity.into() {
                 let custom_err = ResponseJson::default().set_err_msg("person backpack over 255");
 
                 return Ok(HttpResponse::BadRequest().json(custom_err));
             }
 
-            if person.stash_item_list.len() > MAX_STASH_LEN.into() {
+            if person.stash_item_list.len() > person.stash_hard_capacity.into() {
                 let custom_err = ResponseJson::default().set_err_msg("person stash over 300");
 
                 return Ok(HttpResponse::BadRequest().json(custom_err));
