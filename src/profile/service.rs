@@ -69,6 +69,28 @@ async fn query_all_cache_v2(config: web::Data<AppData>) -> impl Responder {
     HttpResponse::Ok().json(res)
 }
 
+// TODO
+#[instrument]
+#[post("/update_all_profile_squad_tag")]
+async fn update_all_profile_squad_tag(config: web::Data<AppData>) -> impl Responder {
+    info!("");
+
+    let cloned_folder_path = config.rwr_profile_folder_path.clone();
+
+    HttpResponse::Ok()
+}
+
+// TODO
+#[instrument]
+#[post("/update_selected_profile_squad_tag")]
+async fn update_selected_profile_squad_tag(config: web::Data<AppData>) -> impl Responder {
+    info!("");
+
+    let cloned_folder_path = config.rwr_profile_folder_path.clone();
+
+    HttpResponse::Ok()
+}
+
 #[instrument]
 #[post("/update")]
 async fn update_profile() -> impl Responder {
