@@ -17,6 +17,10 @@
   "server_log_folder_path": "temp/logs",
   // 服务器上传存档临时目录，目标路径必须存在
   "server_upload_temp_folder_path": "temp/upload_temp"
+  // 服务端是否每小时请求查询存档数据并缓存(用于查询系统)
+  "server_hourly_request": true,
+  // 服务绑定的 TCP 端口
+  "port": 8080
 }
 ```
 
@@ -150,6 +154,10 @@ server {
   "server_log_folder_path": "temp/logs",
   // 服务器上传存档临时目录，目标路径必须存在
   "server_upload_temp_folder_path": "temp/upload_temp"
+  // 服务端是否每小时请求查询存档数据并缓存(用于查询系统)
+  "server_hourly_request": true,
+  // 服务绑定的 TCP 端口
+  "port": 8080
 }
 ```
 
