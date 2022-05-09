@@ -72,7 +72,10 @@ pub fn save_person(p: &Person) -> Result<String> {
     let mut backpack_tag = BytesStart::owned(b"backpack".to_owned(), "backpack".len());
 
     // 1.92 新增: 仓库上限
-    backpack_tag.push_attribute(("hard_capacity", p.backpack_hard_capacity.to_string().as_str()));
+    backpack_tag.push_attribute((
+        "hard_capacity",
+        p.backpack_hard_capacity.to_string().as_str(),
+    ));
 
     if p.backpack_item_list.len() == 0 {
         writer.write_event(Event::Empty(backpack_tag))?;
@@ -124,7 +127,9 @@ pub async fn insert_person_list_backpack_to_file(
             let mut new_person: Person = _person.clone();
 
             // 若超出, 终止操作
-            if new_person.backpack_item_list.len() + item_list.len() > new_person.backpack_hard_capacity.into() {
+            if new_person.backpack_item_list.len() + item_list.len()
+                > new_person.backpack_hard_capacity.into()
+            {
                 error!("person id: {} backpack over 255", id);
                 return (id, new_person);
             }
@@ -140,7 +145,6 @@ pub async fn insert_person_list_backpack_to_file(
     // }
 
     let folder_path = path.to_string();
-
 
     let future_vec = new_all_person_list.into_iter().map(|info| {
         let cloned_folder_path = folder_path.clone();

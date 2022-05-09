@@ -62,7 +62,7 @@ async fn query_all_cache_v2(config: web::Data<AppData>) -> impl Responder {
 
     let res = QueryAllCacheV2Res {
         all_person_list_str: list_str.clone(),
-        snapshot_time: snapshot_time.clone()
+        snapshot_time: snapshot_time.clone(),
     };
 
     info!("query all cache successful");

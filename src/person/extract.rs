@@ -89,7 +89,7 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
                             match attr_key {
                                 b"hard_capacity" => {
                                     person.stash_hard_capacity = attr_value.parse()?;
-                                },
+                                }
                                 _ => {}
                             }
                         }
@@ -105,7 +105,7 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
                             match attr_key {
                                 b"hard_capacity" => {
                                     person.backpack_hard_capacity = attr_value.parse()?;
-                                },
+                                }
                                 _ => {}
                             }
                         }

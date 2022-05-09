@@ -9,8 +9,8 @@ use crate::person::async_extract::{
 use crate::person::extract::extract_person;
 use crate::person::model::{GroupInfo, ResetXpReq, UpdatePersonSoldierGroupRes};
 use crate::person::save::{
-    insert_person_list_backpack_to_file,
-    save_person_to_file, update_person_list_soldider_group_to_file,
+    insert_person_list_backpack_to_file, save_person_to_file,
+    update_person_list_soldider_group_to_file,
 };
 use crate::AppData;
 use actix_files::NamedFile;
@@ -317,7 +317,9 @@ async fn insert_all_person_backpack(
                 &config.rwr_profile_folder_path,
                 &all_person_list,
                 &insert_backpack_item_list,
-            ).await {
+            )
+            .await
+            {
                 Ok(()) => {
                     info!(
                         "inser all person backpack success, backpack_item_list: {:?}",
@@ -364,7 +366,9 @@ async fn insert_selected_person_backpack(
                 &config.rwr_profile_folder_path,
                 &all_person_list,
                 &insert_backpack_item_list,
-            ).await {
+            )
+            .await
+            {
                 Ok(()) => {
                     info!(
                         "inser selected person backpack success, backpack_item_list: {:?}",
@@ -376,7 +380,10 @@ async fn insert_selected_person_backpack(
                     )
                 }
                 Err(err) => {
-                    error!("insert selected person backpack to file person error {:?}", err);
+                    error!(
+                        "insert selected person backpack to file person error {:?}",
+                        err
+                    );
                     HttpResponse::BadRequest()
                         .json(ResponseJson::default().set_err_msg("save selected person error"))
                 }
@@ -457,7 +464,10 @@ async fn update_selected_soldier_group(
                     error_profile_list: err_profile_id_list,
                 }),
                 Err(err) => {
-                    error!("update selected person soldider group to file error {:?}", err);
+                    error!(
+                        "update selected person soldider group to file error {:?}",
+                        err
+                    );
                     HttpResponse::BadRequest().json(
                         ResponseJson::default()
                             .set_err_msg("update selected person soldider group to file error"),
@@ -468,10 +478,11 @@ async fn update_selected_soldier_group(
         Err(err) => {
             error!("update selected person soldider group error {:?}", err);
 
-            HttpResponse::BadRequest()
-                .json(ResponseJson::default().set_err_msg("update selected person soldider group error"))
+            HttpResponse::BadRequest().json(
+                ResponseJson::default().set_err_msg("update selected person soldider group error"),
+            )
         }
-    }
+    };
 }
 
 #[instrument]

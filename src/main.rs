@@ -4,6 +4,7 @@ use crate::profile::service::profile_config;
 use crate::user::service::user_config;
 use actix_web::{web, App, HttpServer};
 use anyhow::{Error, Result};
+use chrono::prelude::*;
 use tokio;
 use tokio::{
     sync::Mutex,
@@ -12,7 +13,6 @@ use tokio::{
 use tracing::{error, info};
 use tracing_appender::rolling;
 use tracing_subscriber::{filter::LevelFilter, prelude::*};
-use chrono::prelude::*;
 
 mod constant;
 mod init;
@@ -36,7 +36,7 @@ async fn main() -> Result<()> {
         // hourly query_all
         snapshot_data: Mutex::new(vec![]),
         snapshot_str: Mutex::new(String::new()),
-        snapshot_time: Mutex::new(String::new())
+        snapshot_time: Mutex::new(String::new()),
     });
 
     let file_appender = rolling::daily(&server_log_folder_path, "info.log");
@@ -61,36 +61,39 @@ async fn main() -> Result<()> {
 
     let app_data_c = app_data.clone();
 
-    tokio::spawn(async move {
-        // 1 hour interval
-        let mut interval = interval(Duration::from_secs(60 * 60));
+    if config.server_hourly_request {
+        tokio::spawn(async move {
+            // 1 hour interval
+            let mut interval = interval(Duration::from_secs(60 * 60));
 
-        loop {
-            interval.tick().await;
+            loop {
+                interval.tick().await;
 
-            let folder_path = app_data_c.rwr_profile_folder_path.clone();
+                let folder_path = app_data_c.rwr_profile_folder_path.clone();
 
-            match async_extract_all_person_and_profiles(folder_path).await {
-                Ok(all_person_and_profiles_list) => {
-                    info!("query all peron res {:?}", all_person_and_profiles_list);
+                match async_extract_all_person_and_profiles(folder_path).await {
+                    Ok(all_person_and_profiles_list) => {
+                        info!("query all peron res {:?}", all_person_and_profiles_list);
 
-                    let mut snapshot_data = app_data_c.snapshot_data.lock().await;
-                    *snapshot_data = all_person_and_profiles_list.clone();
+                        let mut snapshot_data = app_data_c.snapshot_data.lock().await;
+                        *snapshot_data = all_person_and_profiles_list.clone();
 
-                    let mut snapshot_str = app_data_c.snapshot_str.lock().await;
-                    *snapshot_str = serde_json::to_string(&all_person_and_profiles_list).unwrap();
+                        let mut snapshot_str = app_data_c.snapshot_str.lock().await;
+                        *snapshot_str =
+                            serde_json::to_string(&all_person_and_profiles_list).unwrap();
 
-                    let local = Local::now();
-                    let current_time = local.format("%Y-%m-%d %H:%M:%S").to_string();
-                    let mut snapshot_time = app_data_c.snapshot_time.lock().await;
-                    *snapshot_time = current_time;
-                }
-                Err(err) => {
-                    error!("query all person error: {:?}", err);
+                        let local = Local::now();
+                        let current_time = local.format("%Y-%m-%d %H:%M:%S").to_string();
+                        let mut snapshot_time = app_data_c.snapshot_time.lock().await;
+                        *snapshot_time = current_time;
+                    }
+                    Err(err) => {
+                        error!("query all person error: {:?}", err);
+                    }
                 }
             }
-        }
-    });
+        });
+    }
 
     HttpServer::new(move || {
         App::new()
@@ -99,7 +102,7 @@ async fn main() -> Result<()> {
             .configure(profile_config)
             .configure(person_config)
     })
-    .bind("127.0.0.1:8080")?
+    .bind(format!("127.0.0.1:{}", config.port))?
     .run()
     .await
     .map_err(Error::msg)

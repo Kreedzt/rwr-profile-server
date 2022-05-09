@@ -32,7 +32,7 @@ pub struct Profile {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct QueryAllCacheV2Res {
     pub all_person_list_str: String,
-    pub snapshot_time: String
+    pub snapshot_time: String,
 }
 
 impl Default for Stats {

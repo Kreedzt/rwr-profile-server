@@ -9,6 +9,8 @@ pub struct Config {
     pub server_data_folder_path: String,
     pub server_log_folder_path: String,
     pub server_upload_temp_folder_path: String,
+    pub server_hourly_request: bool,
+    pub port: u32,
 }
 
 #[derive(Debug)]

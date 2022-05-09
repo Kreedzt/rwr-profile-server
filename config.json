@@ -2,5 +2,7 @@
   "rwr_profile_folder_path": "temp/profiles",
   "server_data_folder_path": "temp/data",
   "server_log_folder_path": "temp/logs",
-  "server_upload_temp_folder_path": "temp/upload_temp"
+  "server_upload_temp_folder_path": "temp/upload_temp",
+  "server_hourly_request": true,
+  "port": 8080
 }
