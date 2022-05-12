@@ -3,6 +3,7 @@ use crate::person::{extract::extract_person, model::StashItemTag};
 use anyhow::Result;
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
 use quick_xml::Writer;
+use std::collections::{HashMap, HashSet};
 use std::io::{Cursor, Write};
 use tracing::{error, warn};
 
@@ -143,6 +144,52 @@ pub async fn insert_person_list_backpack_to_file(
     // for data in new_all_person_list.into_iter() {
     //     save_person_to_file(path, data.0, &data.1)?;
     // }
+
+    let folder_path = path.to_string();
+
+    let future_vec = new_all_person_list.into_iter().map(|info| {
+        let cloned_folder_path = folder_path.clone();
+        return tokio::spawn(
+            async move { save_person_to_file(&cloned_folder_path, info.0, &info.1) },
+        );
+    });
+
+    futures::future::try_join_all(future_vec).await?;
+
+    Ok(())
+}
+
+pub async fn delete_person_item_list_to_file(
+    path: &str,
+    all_person_list: &Vec<(u64, Person)>,
+    item_list: &Vec<String>,
+) -> Result<()> {
+    let key_set: HashSet<String> = item_list.iter().map(|item| {
+        item.clone()
+    }).collect();
+
+    let new_all_person_list: Vec<(u64, Person)> = all_person_list
+        .into_iter()
+        .map(|info| {
+            let (_id, _person) = info;
+            let id: u64 = _id.clone();
+            let mut new_person: Person = _person.clone();
+
+            new_person.backpack_item_list = new_person.backpack_item_list.into_iter().filter(
+                |item| {
+                    return !key_set.contains(&item.key.to_string())
+                }
+            ).collect();
+
+            new_person.stash_item_list = new_person.stash_item_list.into_iter().filter(
+                |item| {
+                    return !key_set.contains(&item.key.to_string())
+                }
+            ).collect();
+
+            (id, new_person)
+        })
+        .collect();
 
     let folder_path = path.to_string();
 

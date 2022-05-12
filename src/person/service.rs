@@ -7,9 +7,9 @@ use crate::person::async_extract::{
     async_extract_all_person, async_extract_all_person_and_profiles, async_extract_selected_person,
 };
 use crate::person::extract::extract_person;
-use crate::person::model::{GroupInfo, ResetXpReq, UpdatePersonSoldierGroupRes};
+use crate::person::model::{GroupInfo, ResetXpReq, UpdatePersonSoldierGroupRes, DeleteSelectedPersonItemListReq};
 use crate::person::save::{
-    insert_person_list_backpack_to_file, save_person_to_file,
+    delete_person_item_list_to_file, insert_person_list_backpack_to_file, save_person_to_file,
     update_person_list_soldider_group_to_file,
 };
 use crate::AppData;
@@ -34,6 +34,8 @@ pub fn person_config(cfg: &mut web::ServiceConfig) {
             .service(update_group_type)
             .service(insert_all_person_backpack)
             .service(insert_selected_person_backpack)
+            .service(delete_item_list)
+            .service(delete_selected_person_item_list)
             .service(update_all_soldier_group)
             .service(update_selected_soldier_group)
             .service(download_person)
@@ -393,6 +395,95 @@ async fn insert_selected_person_backpack(
             error!("update selected person backpack error {:?}", err);
             HttpResponse::BadRequest()
                 .json(ResponseJson::default().set_err_msg("update selected person backpack error"))
+        }
+    };
+}
+
+#[instrument]
+#[post("/delete_item_list")]
+async fn delete_item_list(
+    config: web::Data<AppData>,
+    data: web::Json<Vec<String>>,
+) -> impl Responder {
+    info!("");
+
+    let item_list: Vec<String> = data.into_inner();
+
+    let folder_clone = config.rwr_profile_folder_path.clone();
+
+    return match async_extract_all_person(folder_clone).await {
+        Ok(all_person_list) => {
+            return match delete_person_item_list_to_file(
+                &config.rwr_profile_folder_path,
+                &all_person_list,
+                &item_list,
+            )
+            .await
+            {
+                Ok(()) => {
+                    info!("delete item list success, item_list: {:?}", item_list);
+                    HttpResponse::Ok().json(
+                        ResponseJson::default().set_successful_msg("delete item list successful"),
+                    )
+                }
+                Err(err) => {
+                    error!("delete item list error {:?}", err);
+                    HttpResponse::BadRequest()
+                        .json(ResponseJson::default().set_err_msg("save selected person error"))
+                }
+            }
+        }
+        Err(err) => {
+            error!("delete item list to file person error {:?}", err);
+
+            HttpResponse::BadRequest()
+                .json(ResponseJson::default().set_err_msg("delete item list to person error"))
+        }
+    };
+}
+
+#[instrument]
+#[post("/delete_selected_person_item_list")]
+async fn delete_selected_person_item_list(
+    config: web::Data<AppData>,
+    data: web::Json<DeleteSelectedPersonItemListReq>,
+) -> impl Responder {
+    info!("");
+
+    let delete_data_pre = data.into_inner();
+
+    let item_list = delete_data_pre.item_list;
+    let profile_id_list = delete_data_pre.profile_id_list;
+
+    let folder_clone = config.rwr_profile_folder_path.clone();
+
+    return match async_extract_selected_person(folder_clone, profile_id_list).await {
+        Ok(all_person_list) => {
+            return match delete_person_item_list_to_file(
+                &config.rwr_profile_folder_path,
+                &all_person_list,
+                &item_list,
+            )
+            .await
+            {
+                Ok(()) => {
+                    info!("delete item list success, item_list: {:?}", item_list);
+                    HttpResponse::Ok().json(
+                        ResponseJson::default().set_successful_msg("delete item list successful"),
+                    )
+                }
+                Err(err) => {
+                    error!("delete item list error {:?}", err);
+                    HttpResponse::BadRequest()
+                        .json(ResponseJson::default().set_err_msg("save selected person error"))
+                }
+            }
+        }
+        Err(err) => {
+            error!("delete item list to file person error {:?}", err);
+
+            HttpResponse::BadRequest()
+                .json(ResponseJson::default().set_err_msg("delete item list to person error"))
         }
     };
 }

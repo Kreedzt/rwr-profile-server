@@ -170,3 +170,9 @@ pub struct UpdateSelectedPersonSoldierGroupReq {
 pub struct UpdatePersonSoldierGroupRes {
     pub error_profile_list: Vec<u64>,
 }
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct DeleteSelectedPersonItemListReq {
+    pub profile_id_list: Vec<u64>,
+    pub item_list: Vec<String>
+}
