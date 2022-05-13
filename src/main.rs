@@ -1,6 +1,7 @@
 use crate::model::{AppData, Config};
 use crate::person::{async_extract::async_extract_all_person_and_profiles, service::person_config};
 use crate::profile::service::profile_config;
+use crate::system::service::system_config;
 use crate::user::service::user_config;
 use actix_web::{web, App, HttpServer};
 use anyhow::{Error, Result};
@@ -20,6 +21,7 @@ mod model;
 mod person;
 mod profile;
 mod user;
+mod system;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -101,6 +103,7 @@ async fn main() -> Result<()> {
             .configure(user_config)
             .configure(profile_config)
             .configure(person_config)
+            .configure(system_config)
     })
     .bind(format!("127.0.0.1:{}", config.port))?
     .run()
