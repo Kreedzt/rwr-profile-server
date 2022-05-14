@@ -103,6 +103,8 @@ upx --best --lzma target/release/rwr-profile-server
   + 为选定玩家背包插入指定物品
   + 为所有玩家更改兵种
   + 为指定玩家更改兵种
+  + 为所有玩家移除物品
+  + 为指定玩家移除物品
   + 下载存档
   + 上传存档
 - 玩家记录信息接口（profile）
