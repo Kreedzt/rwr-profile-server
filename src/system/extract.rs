@@ -1,7 +1,7 @@
 use super::model::QuickItem;
-use std::fs;
 use anyhow::{anyhow, Result};
 use serde_json;
+use std::fs;
 
 pub fn get_quick_items_data(data_path: &str) -> Result<Vec<QuickItem>> {
     let file_name = format!("{}/quick_items.json", data_path);

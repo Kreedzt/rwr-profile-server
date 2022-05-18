@@ -164,9 +164,7 @@ pub async fn delete_person_item_list_to_file(
     all_person_list: &Vec<(u64, Person)>,
     item_list: &Vec<String>,
 ) -> Result<()> {
-    let key_set: HashSet<String> = item_list.iter().map(|item| {
-        item.clone()
-    }).collect();
+    let key_set: HashSet<String> = item_list.iter().map(|item| item.clone()).collect();
 
     let new_all_person_list: Vec<(u64, Person)> = all_person_list
         .into_iter()
@@ -175,17 +173,17 @@ pub async fn delete_person_item_list_to_file(
             let id: u64 = _id.clone();
             let mut new_person: Person = _person.clone();
 
-            new_person.backpack_item_list = new_person.backpack_item_list.into_iter().filter(
-                |item| {
-                    return !key_set.contains(&item.key.to_string())
-                }
-            ).collect();
+            new_person.backpack_item_list = new_person
+                .backpack_item_list
+                .into_iter()
+                .filter(|item| return !key_set.contains(&item.key.to_string()))
+                .collect();
 
-            new_person.stash_item_list = new_person.stash_item_list.into_iter().filter(
-                |item| {
-                    return !key_set.contains(&item.key.to_string())
-                }
-            ).collect();
+            new_person.stash_item_list = new_person
+                .stash_item_list
+                .into_iter()
+                .filter(|item| return !key_set.contains(&item.key.to_string()))
+                .collect();
 
             (id, new_person)
         })

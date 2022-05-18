@@ -3,8 +3,9 @@ use crate::{
     person::model::{ItemTag, OrderTag, Person, StashItemTag},
     profile::{extract::extract_profile, model::Profile},
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use futures::{self, FutureExt};
+use rayon::prelude::*;
 use tokio;
 use tracing::info;
 
@@ -62,18 +63,24 @@ pub async fn async_extract_all_person_and_profiles(folder_path: String) -> Resul
     let person_vec = futures::future::try_join_all(person_future_vec).await?;
     let profile_vec = futures::future::try_join_all(profile_future_vec).await?;
 
-    let mut res_v: ExtractAllVec = Vec::with_capacity(entries.len());
+    let res_v: Result<ExtractAllVec> = entries
+        .into_par_iter()
+        .enumerate()
+        .map(|(index, id)| {
+            let person = person_vec
+                .get(index)
+                .ok_or(anyhow!("error in person_vec get: {}", index))?;
+            let profile = profile_vec
+                .get(index)
+                .ok_or(anyhow!("error in profile_vec get: {}", index))?;
 
-    for (index, id) in entries.into_iter().enumerate() {
-        let person = person_vec.get(index).unwrap();
-        let profile = profile_vec.get(index).unwrap();
+            let push_item: ExtractAllType = (id, person.clone(), profile.clone());
 
-        let push_item: ExtractAllType = (id, person.clone(), profile.clone());
+            Ok(push_item)
+        })
+        .collect();
 
-        res_v.push(push_item);
-    }
-
-    Ok(res_v)
+    Ok(res_v?)
 }
 
 type ExtractPersonType = (u64, Person);

@@ -2,8 +2,9 @@ use crate::{
     person::model::{ItemTag, OrderTag, Person, StashItemTag},
     profile::{extract::extract_profile, model::Profile},
 };
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use quick_xml::{events::Event, Reader};
+use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{fs, io, str};
 use tracing::info;
 
@@ -256,8 +257,6 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
 }
 
 pub fn extract_all_person(folder_path: &str) -> Result<Vec<(u64, Person)>> {
-    let mut v: Vec<(u64, Person)> = Vec::new();
-
     let entries = fs::read_dir(folder_path)?
         .map(|res| res.map(|e| e.path()))
         .filter(|path| {
@@ -269,28 +268,32 @@ pub fn extract_all_person(folder_path: &str) -> Result<Vec<(u64, Person)>> {
         })
         .collect::<Result<Vec<_>, io::Error>>()?;
 
-    for path in entries.into_iter() {
-        let reader_path = path.into_os_string().into_string().unwrap();
+    let v: Result<Vec<(u64, Person)>> = entries
+        .into_par_iter()
+        .map(|path| {
+            let file_name = path
+                .file_name()
+                .ok_or(anyhow!("path read file_name error: {:?}", path))?
+                .to_str()
+                .ok_or(anyhow!("path file_name to str error: {:?}", path))?;
 
-        let path_string = reader_path.clone();
-        let path_list = path_string.split("\\").collect::<Vec<_>>();
+            let last_list = file_name.split(".").collect::<Vec<_>>();
 
-        let last_path = path_list.last().unwrap();
-        let last_list = last_path.split(".").collect::<Vec<_>>();
-        let id: u64 = last_list.first().unwrap().parse()?;
+            let id: u64 = last_list
+                .first()
+                .ok_or(anyhow!("last list get first error: {:?}", path))?
+                .parse()?;
 
-        // info!("extract item: {} / {}", id, last_path);
-        let person = extract_person(id, folder_path)?;
+            let person = extract_person(id, folder_path)?;
 
-        v.push((id, person));
-    }
+            Ok((id, person))
+        })
+        .collect();
 
-    Ok(v)
+    Ok(v?)
 }
 
 pub fn extract_all_person_and_profiles(folder_path: &str) -> Result<Vec<(u64, Person, Profile)>> {
-    let mut v: Vec<(u64, Person, Profile)> = Vec::new();
-
     let entries = fs::read_dir(folder_path)?
         .map(|res| res.map(|e| e.path()))
         .filter(|path| {
@@ -302,23 +305,29 @@ pub fn extract_all_person_and_profiles(folder_path: &str) -> Result<Vec<(u64, Pe
         })
         .collect::<Result<Vec<_>, io::Error>>()?;
 
-    for path in entries.into_iter() {
-        let reader_path = path.into_os_string().into_string().unwrap();
+    let v: Result<Vec<(u64, Person, Profile)>> = entries
+        .into_par_iter()
+        .map(|path| {
+            let file_name = path
+                .file_name()
+                .ok_or(anyhow!("path read file_name error: {:?}", path))?
+                .to_str()
+                .ok_or(anyhow!("path file_name to str error: {:?}", path))?;
 
-        let path_string = reader_path.clone();
-        let path_list = path_string.split("\\").collect::<Vec<_>>();
+            let last_list = file_name.split(".").collect::<Vec<_>>();
 
-        let last_path = path_list.last().unwrap();
-        let last_list = last_path.split(".").collect::<Vec<_>>();
-        let id: u64 = last_list.first().unwrap().parse()?;
+            let id: u64 = last_list
+                .first()
+                .ok_or(anyhow!("last list get first error: {:?}", path))?
+                .parse()?;
 
-        // info!("extract item: {} / {}", id, last_path);
-        let person = extract_person(id, folder_path)?;
+            let person = extract_person(id, folder_path)?;
 
-        let profile = extract_profile(id, folder_path)?;
+            let profile = extract_profile(id, folder_path)?;
 
-        v.push((id, person, profile));
-    }
+            Ok((id, person, profile))
+        })
+        .collect();
 
-    Ok(v)
+    Ok(v?)
 }

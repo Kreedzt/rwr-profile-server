@@ -20,8 +20,8 @@ mod init;
 mod model;
 mod person;
 mod profile;
-mod user;
 mod system;
+mod user;
 
 #[tokio::main]
 async fn main() -> Result<()> {

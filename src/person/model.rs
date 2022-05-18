@@ -174,5 +174,5 @@ pub struct UpdatePersonSoldierGroupRes {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct DeleteSelectedPersonItemListReq {
     pub profile_id_list: Vec<u64>,
-    pub item_list: Vec<String>
+    pub item_list: Vec<String>,
 }

@@ -7,7 +7,9 @@ use crate::person::async_extract::{
     async_extract_all_person, async_extract_all_person_and_profiles, async_extract_selected_person,
 };
 use crate::person::extract::extract_person;
-use crate::person::model::{GroupInfo, ResetXpReq, UpdatePersonSoldierGroupRes, DeleteSelectedPersonItemListReq};
+use crate::person::model::{
+    DeleteSelectedPersonItemListReq, GroupInfo, ResetXpReq, UpdatePersonSoldierGroupRes,
+};
 use crate::person::save::{
     delete_person_item_list_to_file, insert_person_list_backpack_to_file, save_person_to_file,
     update_person_list_soldider_group_to_file,
