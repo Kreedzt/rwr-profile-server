@@ -1,10 +1,12 @@
+use std::borrow::Borrow;
+
 use super::extract::extract_person;
 use crate::{
     person::model::{ItemTag, OrderTag, Person, StashItemTag},
     profile::{extract::extract_profile, model::Profile},
 };
 use anyhow::{anyhow, Result};
-use futures::{self, FutureExt};
+use futures::{self, FutureExt, SinkExt};
 use rayon::prelude::*;
 use tokio;
 use tracing::info;
@@ -32,8 +34,6 @@ pub async fn async_extract_all_person_and_profiles(folder_path: String) -> Resul
         }
     }
 
-    let mut v: ExtractAllVec = Vec::new();
-
     let person_future_vec = entries
         .clone()
         .into_iter()
@@ -41,7 +41,7 @@ pub async fn async_extract_all_person_and_profiles(folder_path: String) -> Resul
             let cloned_folder_path = folder_path.clone();
 
             return tokio::spawn(async move {
-                let person = extract_person(id, &cloned_folder_path).unwrap();
+                let person = extract_person(id, &cloned_folder_path);
                 person
             });
         })
@@ -54,7 +54,7 @@ pub async fn async_extract_all_person_and_profiles(folder_path: String) -> Resul
             let cloned_folder_path = folder_path.clone();
 
             return tokio::spawn(async move {
-                let profile = extract_profile(id, &cloned_folder_path).unwrap();
+                let profile = extract_profile(id, &cloned_folder_path);
                 profile
             });
         })
@@ -67,15 +67,31 @@ pub async fn async_extract_all_person_and_profiles(folder_path: String) -> Resul
         .into_par_iter()
         .enumerate()
         .map(|(index, id)| {
+            // person
             let person = person_vec
                 .get(index)
-                .ok_or(anyhow!("error in person_vec get: {}", index))?;
+                .ok_or(anyhow!("error in profile_vec get: {}", index))?;
+
+            let person = person
+                .as_ref()
+                .map_err(|err| anyhow!("ID: {} err in person extract: {:?}", id, err))
+                .unwrap();
+
+            let person = person.clone();
+
+            // profile
             let profile = profile_vec
                 .get(index)
                 .ok_or(anyhow!("error in profile_vec get: {}", index))?;
 
-            let push_item: ExtractAllType = (id, person.clone(), profile.clone());
+            let profile = profile
+                .as_ref()
+                .map_err(|err| anyhow!("ID: {} err in profile extract: {:?}", id, err))
+                .unwrap();
 
+            let profile = profile.clone();
+
+            let push_item: ExtractAllType = (id, person, profile);
             Ok(push_item)
         })
         .collect();

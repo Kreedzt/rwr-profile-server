@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
 
-use crate::constant::{MAX_DEFAULT_BACKPACK_LEN, MAX_DEFAULT_STASH_LEN};
+use crate::{
+    constant::{MAX_DEFAULT_BACKPACK_LEN, MAX_DEFAULT_STASH_LEN},
+    profile::model::Profile,
+};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct StashItemTag {

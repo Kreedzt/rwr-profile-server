@@ -245,7 +245,8 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
                 }
             }
             Ok(Event::End(e)) => {
-                println!("end e.name: {:?}", str::from_utf8(e.name())?);
+                // DEBUG
+                // println!("end e.name: {:?}", str::from_utf8(e.name())?);
             }
             Ok(Event::Eof) => break,
             Err(e) => panic!("Error at position {} : {:?}", reader.buffer_position(), e),
