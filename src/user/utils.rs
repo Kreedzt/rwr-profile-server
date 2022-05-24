@@ -1,4 +1,5 @@
 use super::model::{User, Users};
+use crate::constant::USERS_JSON_FILE_NAME;
 use crate::user::extract::get_user_profile_id;
 use crate::AppData;
 use anyhow::{anyhow, Result};
@@ -8,7 +9,7 @@ use std::io::Write;
 use tracing_log::log::info;
 
 pub fn get_user_json_data(data_path: &str) -> Result<Users> {
-    let file_name = format!("{}/users.json", data_path);
+    let file_name = format!("{}/{}", data_path, USERS_JSON_FILE_NAME);
     let file = fs::read_to_string(&file_name)?;
 
     let user_json: Users = serde_json::from_str(&file)?;
@@ -34,7 +35,7 @@ pub fn validate_user(username: &str, password: &str, data_path: &str) -> Result<
 }
 
 pub fn update_user_list(user_list: Vec<User>, data_path: &str) -> Result<()> {
-    let file_name = format!("{}/users.json", data_path);
+    let file_name = format!("{}/{}", data_path, USERS_JSON_FILE_NAME);
 
     let mut user_json: Users = get_user_json_data(&data_path)?;
 
@@ -67,7 +68,7 @@ pub fn get_user_info(username: &str, data_path: &str) -> Result<User> {
 }
 
 pub fn check_user_in_user_list(username: &str, data_path: &str) -> Result<bool> {
-    let file_name = format!("{}/users.json", data_path);
+    let file_name = format!("{}/{}", data_path, USERS_JSON_FILE_NAME);
 
     info!("check_user_in_user_list:: file_name: {}", file_name);
 

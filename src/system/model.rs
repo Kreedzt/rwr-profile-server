@@ -7,3 +7,9 @@ pub struct QuickItem {
     pub key: String,
     pub label: String,
 }
+
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct RankItem {
+    pub xp: f64,
+    pub name: String
+}
