@@ -1,4 +1,5 @@
 use crate::AppData;
+use crate::system::extract::get_ranks_data;
 use crate::{
     model::ResponseJson,
     system::model::QuickItem,
@@ -11,7 +12,8 @@ pub fn system_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/system")
             .service(query_quick_items)
-            .service(update_quick_items),
+            .service(update_quick_items)
+            .service(query_ranks),
     );
 }
 
@@ -23,7 +25,7 @@ async fn query_quick_items(config: web::Data<AppData>) -> impl Responder {
     return match get_quick_items_data(&config.server_data_folder_path) {
         Ok(data) => HttpResponse::Ok().json(data),
         Err(err) => {
-            error!("query quick items error {:?}", err);
+            error!("query quick items error: {:?}", err);
             HttpResponse::BadRequest()
                 .json(ResponseJson::default().set_err_msg("query quick items error"))
         }
@@ -52,4 +54,19 @@ async fn update_quick_items(
                 .json(ResponseJson::default().set_err_msg("update quick items error"))
         }
     };
+}
+
+#[instrument]
+#[get("/query_ranks")]
+async fn query_ranks(config: web::Data<AppData>) -> impl Responder {
+    info!("");
+
+    return match get_ranks_data(&config.server_data_folder_path) {
+        Ok(data) => HttpResponse::Ok().json(data),
+        Err(err) => {
+            error!("query ranks error: {:?}", err);
+            HttpResponse::BadRequest()
+                .json(ResponseJson::default().set_err_msg("query ranks error"))
+        }
+    }
 }
