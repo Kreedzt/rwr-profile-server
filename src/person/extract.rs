@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use crate::{
     person::model::{ItemTag, OrderTag, Person, StashItemTag},
     profile::{extract::extract_profile, model::Profile},

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use super::model::{User, Users};
 use crate::constant::USERS_JSON_FILE_NAME;
 use crate::user::extract::get_user_profile_id;

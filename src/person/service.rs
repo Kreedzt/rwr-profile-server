@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use super::model::{
     InsertSelectedPersonBackpackReq, Person, StashItemTag, UpdateAllPersonSoldierGroupReq,
     UpdatePersonReq, UpdateSelectedPersonSoldierGroupReq,

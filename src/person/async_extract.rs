@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use std::borrow::Borrow;
 
 use super::extract::extract_person;

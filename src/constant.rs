@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 pub static MAX_DEFAULT_BACKPACK_LEN: u16 = 255;
 pub static MAX_DEFAULT_STASH_LEN: u16 = 300;
 

@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use super::model::Profile;
 use anyhow::Result;
 use quick_xml::{events::Event, Reader};

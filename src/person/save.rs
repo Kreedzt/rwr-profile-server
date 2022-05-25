@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use super::model::Person;
 use crate::person::{extract::extract_person, model::StashItemTag};
 use anyhow::Result;

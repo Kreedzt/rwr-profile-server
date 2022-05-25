@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use anyhow::{anyhow, Result};
 use quick_xml::{events::Event, Reader};
 use std::fs;

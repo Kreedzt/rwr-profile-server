@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use crate::constant::QUICK_ITEMS_JSON_FILE_NAME;
 
 use super::model::QuickItem;

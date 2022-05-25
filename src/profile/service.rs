@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use crate::profile::model::QueryAllCacheV2Res;
 use crate::{model::ResponseJson, profile::extract::extract_profile, AppData};
 use actix_files::NamedFile;

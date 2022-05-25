@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use super::person::model::Person;
 use super::profile::model::Profile;
 use serde::{Deserialize, Serialize};

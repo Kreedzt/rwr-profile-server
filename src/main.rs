@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use crate::model::{AppData, Config};
 use crate::person::{async_extract::async_extract_all_person_and_profiles, service::person_config};
 use crate::profile::service::profile_config;

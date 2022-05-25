@@ -1,3 +1,4 @@
+// SPDX-License-Identifier: GPL-3.0-only
 use crate::model::ResponseJson;
 use crate::user::model::{LoginReq, RegisterReq, User};
 use crate::user::utils::{
