@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 use super::person::model::Person;
 use super::profile::model::Profile;
+use super::system::model::RankItem;
 use serde::{Deserialize, Serialize};
 use tokio::sync::Mutex;
 
@@ -27,6 +28,8 @@ pub struct AppData {
     pub snapshot_str: Mutex<String>,
     // cache time
     pub snapshot_time: Mutex<String>,
+    // cache ranks
+    pub snapshot_ranks: Mutex<Vec<RankItem>>
 }
 
 #[derive(Debug, Serialize, Deserialize)]

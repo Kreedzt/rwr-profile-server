@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: GPL-3.0-only
 use crate::AppData;
 use crate::system::extract::get_ranks_data;
+use crate::system::model::RankItem;
 use crate::{
     model::ResponseJson,
     system::model::QuickItem,
@@ -62,12 +63,24 @@ async fn update_quick_items(
 async fn query_ranks(config: web::Data<AppData>) -> impl Responder {
     info!("");
 
-    return match get_ranks_data(&config.server_data_folder_path) {
-        Ok(data) => HttpResponse::Ok().json(data),
-        Err(err) => {
-            error!("query ranks error: {:?}", err);
-            HttpResponse::BadRequest()
-                .json(ResponseJson::default().set_err_msg("query ranks error"))
+    let mut snapshot_ranks = config.snapshot_ranks.lock().await;
+
+    let snapshot_ranks_data: Vec<RankItem> = snapshot_ranks.clone();
+
+    if snapshot_ranks_data.len() == 0 {
+        return match get_ranks_data(&config.server_data_folder_path) {
+            Ok(data) => {
+                *snapshot_ranks = data.clone();
+
+                HttpResponse::Ok().json(data.clone())
+            },
+            Err(err) => {
+                error!("query ranks error: {:?}", err);
+                HttpResponse::BadRequest()
+                    .json(ResponseJson::default().set_err_msg("query ranks error"))
+            }
         }
     }
+
+    return HttpResponse::Ok().json(snapshot_ranks_data);
 }
