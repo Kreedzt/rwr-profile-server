@@ -103,25 +103,25 @@ jobs:
           files: target/${{ matrix.target }}/release/rwr-profile-server-${{ matrix.target }}.zip
           generate_release_notes: true
           draft: true
-  # docker:
-  #   name: Publish to Docker Hub
-  #   if: startsWith(github.ref, 'refs/tags/')
-  #   runs-on: ubuntu-latest
-  #   needs: release
-  #   steps:
-  #     - name: Set up Docker Buildx
-  #       uses: docker/setup-buildx-action@v1
-  #     - name: Login to DockerHub
-  #       uses: docker/login-action@v1
-  #       with:
-  #         username: ${{ secrets.DOCKERHUB_USERNAME }}
-  #         password: ${{ secrets.DOCKERHUB_TOKEN }}
-  #     - name: Build and push
-  #       id: docker_build
-  #       uses: docker/build-push-action@v2
-  #       with:
-  #         push: true
-  #         tags: Kreedzt/rwr-profile-server:latest, Kreedzt/rwr-profile-server:${{ github.ref_name }}
+  docker:
+    name: Publish to Docker Hub
+    if: startsWith(github.ref, 'refs/tags/')
+    runs-on: ubuntu-latest
+    needs: release
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build and push
+        id: docker_build
+        uses: docker/build-push-action@v2
+        with:
+          push: true
+          tags: zhaozisong0/rwr-profile-server:latest, zhaozisong0/rwr-profile-server:${{ github.ref_name }}
   # publish-crate:
   #   name: Publish to crates.io
   #   if: startsWith(github.ref, 'refs/tags/')

@@ -106,7 +106,7 @@ async fn main() -> Result<()> {
             .configure(person_config)
             .configure(system_config)
     })
-    .bind(format!("127.0.0.1:{}", config.port))?
+    .bind(format!("0.0.0.0:{}", config.port))?
     .run()
     .await
     .map_err(Error::msg)
