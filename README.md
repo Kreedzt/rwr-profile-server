@@ -58,7 +58,7 @@ upx --best --lzma target/release/rwr-profile-server
 
 ## 部署
 
-见 [部署文档](https://github.com/Kreedzt/rwr-profile-web/DEPLOYMENT.md)
+见 [部署文档](https://github.com/Kreedzt/rwr-profile-server/blob/master/DEPLOYMENT.md)
 
 ## 其他项目
 
