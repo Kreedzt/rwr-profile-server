@@ -94,7 +94,7 @@ config.json 配置项参考如下:
 挂载的目录说明:
 - /app/data: 对应文件准备中的 `data` 目录
 - /app/logs: 对应文件准备中的  `logs` 目录
-- /app/profiles: 对应文件准备中的 `profiles` 目录
+- /app/profiles: 对应 rwr 存档目录
 - /app/upload_temp: 对应文件准备中的 `upload_temp`
 
 启动命令参考:
