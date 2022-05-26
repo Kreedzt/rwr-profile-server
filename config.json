@@ -1,8 +1,8 @@
 {
-  "rwr_profile_folder_path": "/profiles",
-  "server_data_folder_path": "/data",
-  "server_log_folder_path": "/logs",
-  "server_upload_temp_folder_path": "/upload_temp",
+  "rwr_profile_folder_path": "/app/profiles",
+  "server_data_folder_path": "/app/data",
+  "server_log_folder_path": "/app/logs",
+  "server_upload_temp_folder_path": "/app/upload_temp",
   "server_hourly_request": false,
   "port": 8080
 }

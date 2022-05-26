@@ -1,24 +1,21 @@
 # build
-FROM rust:1.61.0-slim-buster as build
+FROM ekidd/rust-musl-builder:latest as build
 
-RUN USER=root cargo new --bin rwr-profile-server
 WORKDIR /rwr-profile-server
 
-COPY ./Cargo.lock ./Cargo.lock
 COPY ./Cargo.toml ./Cargo.toml
-
-RUN cargo build --release
-RUN rm src/*.rs
-
+COPY ./Cargo.lock ./Cargo.lock
 COPY ./src ./src
-
-RUN rm ./target/release/deps/rwr_profile_server*
-RUN cargo build --release
+RUN cargo build --locked --release
+RUN mkdir -p build-out/
+RUN cp target/x86_64-unknown-linux-musl/release/rwr-profile-server build-out/
 
 # run
-FROM rust:1.61.0-slim-buster
+# FROM rust:1.61.0-slim-buster
+FROM scratch
+WORKDIR /app
 
-COPY --from=build /rwr-profile-server/target/release/rwr-profile-server .
+COPY --from=build /rwr-profile-server/build-out/rwr-profile-server .
 COPY ./config.json ./config.json
 
 EXPOSE 8080
