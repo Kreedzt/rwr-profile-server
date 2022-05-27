@@ -20,15 +20,10 @@ pub fn get_user_profile_id(username: &str, profile_path: &str) -> Result<u64> {
         .collect::<Result<Vec<_>, io::Error>>()?;
 
     for path in entries.into_iter() {
-        let reader_path = path.into_os_string().into_string().unwrap();
+        let file_name = path.file_name().unwrap();
+        let file_name_str = String::from(file_name.to_str().unwrap());
 
-        let path_string = reader_path.clone();
-        let path_list = path_string.split("\\").collect::<Vec<_>>();
-        info!("path_list: {:?}", path_list);
-
-        let last_path = path_list.last().unwrap();
-
-        let mut reader = Reader::from_file(reader_path)?;
+        let mut reader = Reader::from_file(path)?;
 
         let mut buf = Vec::new();
 
@@ -44,11 +39,11 @@ pub fn get_user_profile_id(username: &str, profile_path: &str) -> Result<u64> {
                             match attr_key {
                                 b"username" => {
                                     if attr_value == username {
-                                        info!("found username: {}, id: {}", username, last_path);
                                         let last_path_name: Vec<&str> =
-                                            last_path.split(".").collect();
+                                            file_name_str.split(".").collect();
                                         if let Some(id_str) = last_path_name.first() {
                                             let parse_res = id_str.parse::<u64>()?;
+                                            info!("found username: {}, id: {}", username, parse_res);
                                             return Ok(parse_res);
                                         }
                                     }

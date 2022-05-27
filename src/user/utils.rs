@@ -13,7 +13,7 @@ pub fn get_user_json_data(data_path: &str) -> Result<Users> {
     let file_name = format!("{}/{}", data_path, USERS_JSON_FILE_NAME);
     let file = fs::read_to_string(&file_name)?;
 
-    let user_json: Users = serde_json::from_str(&file)?;
+    let user_json: Users = serde_json::from_str(&file.trim())?;
 
     Ok(user_json)
 }
