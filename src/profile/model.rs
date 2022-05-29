@@ -4,7 +4,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Stats {
     pub kills: u64,
-    pub deaths: u64,
+    pub deaths: i64,
     pub time_played: f64,
     pub player_kills: u64,
     pub team_kills: u64,

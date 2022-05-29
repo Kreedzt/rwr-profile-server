@@ -101,6 +101,8 @@ pub fn register_user(username: &str, password: &str, config: &AppData) -> Result
 
     let profile_id = get_user_profile_id(username, &config.rwr_profile_folder_path);
 
+    info!("register_user fn: profile_id: {:?}", profile_id);
+
     return match profile_id {
         Ok(id) => Ok(id),
         Err(e) => Err(e),

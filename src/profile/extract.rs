@@ -3,6 +3,7 @@ use super::model::Profile;
 use anyhow::Result;
 use quick_xml::{events::Event, Reader};
 use std::str;
+use tracing::info;
 
 pub fn extract_profile(id: u64, folder_path: &str) -> Result<Profile> {
     let mut profile = Profile::default();
@@ -51,46 +52,47 @@ pub fn extract_profile(id: u64, folder_path: &str) -> Result<Profile> {
 
                         match attr_key {
                             b"kills" => {
-                                profile.stats.kills = attr_value.parse().unwrap();
+                                profile.stats.kills = attr_value.parse()?;
                             }
                             b"deaths" => {
-                                profile.stats.deaths = attr_value.parse().unwrap();
+                                profile.stats.deaths = attr_value.parse()?;
                             }
                             b"time_played" => {
-                                profile.stats.time_played = attr_value.parse().unwrap();
+                                profile.stats.time_played = attr_value.parse()?;
                             }
                             b"player_kills" => {
-                                profile.stats.player_kills = attr_value.parse().unwrap();
+                                profile.stats.player_kills = attr_value.parse()?;
                             }
                             b"teamkills" => {
-                                profile.stats.team_kills = attr_value.parse().unwrap();
+                                profile.stats.team_kills = attr_value.parse()?;
                             }
+
                             b"longest_kill_streak" => {
-                                profile.stats.longest_kill_streak = attr_value.parse().unwrap();
+                                profile.stats.longest_kill_streak = attr_value.parse()?;
                             }
                             b"targets_destroyed" => {
-                                profile.stats.targets_destroyed = attr_value.parse().unwrap();
+                                profile.stats.targets_destroyed = attr_value.parse()?;
                             }
                             b"vehicles_destroyed" => {
-                                profile.stats.vehicles_destroyed = attr_value.parse().unwrap();
+                                profile.stats.vehicles_destroyed = attr_value.parse()?;
                             }
                             b"soldiers_healed" => {
-                                profile.stats.soldiers_healed = attr_value.parse().unwrap();
+                                profile.stats.soldiers_healed = attr_value.parse()?;
                             }
                             b"times_got_healed" => {
-                                profile.stats.times_got_healed = attr_value.parse().unwrap();
+                                profile.stats.times_got_healed = attr_value.parse()?;
                             }
                             b"distance_moved" => {
-                                profile.stats.distance_moved = attr_value.parse().unwrap();
+                                profile.stats.distance_moved = attr_value.parse()?;
                             }
                             b"shots_fired" => {
-                                profile.stats.shots_fired = attr_value.parse().unwrap();
+                                profile.stats.shots_fired = attr_value.parse()?;
                             }
                             b"throwables_thrown" => {
-                                profile.stats.throwables_thrown = attr_value.parse().unwrap();
+                                profile.stats.throwables_thrown = attr_value.parse()?;
                             }
                             b"rank_progression" => {
-                                profile.stats.rank_progression = attr_value.parse().unwrap();
+                                profile.stats.rank_progression = attr_value.parse()?;
                             }
                             _ => (),
                         }

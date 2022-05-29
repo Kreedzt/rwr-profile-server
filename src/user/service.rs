@@ -24,11 +24,12 @@ async fn register(config: web::Data<AppData>, user: web::Json<RegisterReq>) -> i
     info!("");
     config.user_json_lock.lock().await;
 
-    info!("call register_us fn");
     let res = register_user(&user.username, &user.password, &config);
+    info!("register_user successful, id:{:?}", res);
 
     return match res {
         Ok(id) => {
+            info!("match res successful");
             return match get_user_json_data(&config.server_data_folder_path) {
                 Ok(mut user_json_data) => {
                     user_json_data.user_list.push(User {
@@ -52,14 +53,14 @@ async fn register(config: web::Data<AppData>, user: web::Json<RegisterReq>) -> i
                             )
                         }
                         Err(e) => {
-                            error!("{:?}", e);
+                            error!("update_user_list error: {:?}", e);
                             HttpResponse::BadRequest()
                                 .json(ResponseJson::default().set_err_msg(&e.to_string()))
                         }
                     }
                 }
                 Err(e) => {
-                    error!("{:?}", e);
+                    error!("get_user_json_data error: {:?}", e);
                     HttpResponse::BadRequest()
                         .json(ResponseJson::default().set_err_msg(&e.to_string()))
                 }

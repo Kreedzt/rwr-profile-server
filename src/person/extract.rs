@@ -13,7 +13,6 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
     let mut person = Person::default();
 
     let path = format!("{}/{}.person", folder_path, id);
-    // info!("in extract_person read path: {}", path);
 
     let mut reader = Reader::from_file(path)?;
 
