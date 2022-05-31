@@ -1,5 +1,10 @@
 # RWR GFL 存档管理服务
 
+![license](https://badgen.net/github/license/Kreedzt/rwr-profile-server)
+![latest release](https://badgen.net/github/release/Kreedzt/rwr-profile-server)
+![commits count](https://badgen.net/github/commits/Kreedzt/rwr-profile-server)
+![last commit](https://badgen.net/github/last-commit/Kreedzt/rwr-profile-server)
+
 ## 开发
 > 该项目提供了前端界面, 可用前端界面来进行开发调试: https://github.com/Kreedzt/rwr-profile-web>
 
