@@ -6,7 +6,7 @@
 ![last commit](https://badgen.net/github/last-commit/Kreedzt/rwr-profile-server)
 
 ## 开发
-> 该项目提供了前端界面, 可用前端界面来进行开发调试: https://github.com/Kreedzt/rwr-profile-web>
+> 该项目提供了前端界面, 可用前端界面来进行开发调试: https://github.com/Kreedzt/rwr-profile-web
 
 该项目采用 Rust 语言编写，需要 [Rust](https://www.rust-lang.org/) 开发环境
 
