@@ -99,7 +99,7 @@ config.json 配置项参考如下:
 
 启动命令参考:
 ```sh
-docker run --name=rwr-profile-server-docker -d -p 8080:8080 -v $PWD/data:/app/data -v $PWD/logs:/app/logs -v $PWD/profiles:/app/profiles -v $PWD/upload_temp:/app/upload_temp -d zhaozisong0/rwr-profile-server
+docker run --name=rwr-profile-server-docker -d -p 8080:8080 -v $PWD/data:/app/data -v $PWD/logs:/app/logs -v $PWD/profiles:/app/profiles -v $PWD/upload_temp:/app/upload_temp -d zhaozisong0/rwr-profile-server:latest
 ```
 
 ### 额外说明
