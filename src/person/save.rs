@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-use super::model::Person;
+use super::model::{Person, ItemTag};
 use crate::person::{extract::extract_person, model::StashItemTag};
 use anyhow::Result;
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
@@ -184,6 +184,23 @@ pub async fn delete_person_item_list_to_file(
                 .stash_item_list
                 .into_iter()
                 .filter(|item| return !key_set.contains(&item.key.to_string()))
+                .collect();
+
+            new_person.item_list = new_person.item_list
+                .into_iter()
+                .map(|item| {
+                    if key_set.contains(&item.key.to_string()) {
+                        let new_item = ItemTag {
+                            key: "".to_string(),
+                            index: -1,
+                            amount: 0,
+                            ..item
+                        };
+
+                        return new_item;
+                    }
+                    item
+                })
                 .collect();
 
             (id, new_person)

@@ -67,7 +67,7 @@ async fn main() -> Result<()> {
     let app_data_c = app_data.clone();
 
     if config.server_hourly_request {
-        tokio::spawn(async move {
+        tokio::task::spawn(async move {
             // 1 hour interval
             let mut interval = interval(Duration::from_secs(60 * 60));
 
