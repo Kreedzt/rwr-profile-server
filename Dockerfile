@@ -16,7 +16,7 @@ FROM scratch
 WORKDIR /app
 
 COPY --from=build /rwr-profile-server/build-out/rwr-profile-server .
-COPY ./config.json ./config.json
+COPY ./config_example.json ./config.json
 
 EXPOSE 8080
 
