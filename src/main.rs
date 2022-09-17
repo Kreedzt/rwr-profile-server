@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
-use crate::model::{AppData, Config};
-use crate::person::{async_extract::async_extract_all_person_and_profiles, service::person_config};
+use crate::model::{AppData};
+use crate::person::{service::person_config, async_extract::async_extract_query_data};
 use crate::profile::service::profile_config;
 use crate::system::service::system_config;
 use crate::user::service::user_config;
@@ -10,7 +10,7 @@ use chrono::prelude::*;
 use tokio;
 use tokio::{
     sync::Mutex,
-    time::{interval, Duration, Instant},
+    time::{interval, Duration},
 };
 use tracing::{error, info};
 use tracing_appender::rolling;
@@ -76,7 +76,7 @@ async fn main() -> Result<()> {
 
                 let folder_path = app_data_c.rwr_profile_folder_path.clone();
 
-                match async_extract_all_person_and_profiles(folder_path).await {
+                match async_extract_query_data(folder_path).await {
                     Ok(all_person_and_profiles_list) => {
                         info!("query all peron res {:?}", all_person_and_profiles_list);
 
@@ -86,6 +86,9 @@ async fn main() -> Result<()> {
                         let mut snapshot_str = app_data_c.snapshot_str.lock().await;
                         *snapshot_str =
                             serde_json::to_string(&all_person_and_profiles_list).unwrap();
+
+                        // TODO: next release
+                        // fs::write("demo2_json.json", &*snapshot_str).await.unwrap();
 
                         let local = Local::now();
                         let current_time = local.format("%Y-%m-%d %H:%M:%S").to_string();
