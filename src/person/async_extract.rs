@@ -10,7 +10,7 @@ use anyhow::{anyhow, Result};
 use futures::{self, FutureExt, SinkExt};
 use rayon::prelude::*;
 use tokio;
-use tracing::{info, error};
+use tracing::{error, info};
 
 type ExtractAllType = (u64, Person, Profile);
 type ExtractAllVec = Vec<ExtractAllType>;
@@ -44,9 +44,7 @@ pub async fn async_extract_all_person_and_profiles(folder_path: String) -> Resul
             return tokio::spawn(async move {
                 let person = extract_person(id, &cloned_folder_path);
                 match person {
-                    Ok(p) => {
-                        Ok(p)
-                    },
+                    Ok(p) => Ok(p),
                     Err(e) => {
                         error!("error in extract_person call: {}, {:?}", id, e);
                         Err(e)
@@ -65,9 +63,7 @@ pub async fn async_extract_all_person_and_profiles(folder_path: String) -> Resul
             return tokio::spawn(async move {
                 let profile = extract_profile(id, &cloned_folder_path);
                 match profile {
-                    Ok(p) => {
-                        Ok(p)
-                    },
+                    Ok(p) => Ok(p),
                     Err(e) => {
                         error!("error in extract_profile call: {}, {:?}", id, e);
                         Err(e)

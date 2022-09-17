@@ -27,7 +27,7 @@ pub fn extract_profile(id: u64, folder_path: &str) -> Result<Profile> {
 
                         match attr_key {
                             b"game_version" => {
-                                profile.game_version = attr_value;
+                                profile.game_version = attr_value.parse()?;
                             }
                             b"username" => {
                                 profile.username = attr_value;

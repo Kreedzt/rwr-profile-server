@@ -29,7 +29,7 @@ pub struct AppData {
     // cache time
     pub snapshot_time: Mutex<String>,
     // cache ranks
-    pub snapshot_ranks: Mutex<Vec<RankItem>>
+    pub snapshot_ranks: Mutex<Vec<RankItem>>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

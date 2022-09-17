@@ -15,7 +15,6 @@ pub fn get_quick_items_data(data_path: &str) -> Result<Vec<QuickItem>> {
     Ok(quick_items_json)
 }
 
-
 pub fn get_ranks_data(data_path: &str) -> Result<Vec<RankItem>> {
     let file_name = format!("{}/{}", data_path, RANKS_JSON_FILE_NAME);
     let file = fs::read_to_string(&file_name)?;

@@ -3,7 +3,7 @@ use anyhow::{anyhow, Result};
 use quick_xml::{events::Event, Reader};
 use std::fs;
 use std::io;
-use tracing::{info, error};
+use tracing::{error, info};
 
 pub fn extract_profile_list() {}
 
@@ -28,11 +28,14 @@ pub fn get_user_profile_id(username: &str, profile_path: &str) -> Result<u64> {
         let cloned_path = path.clone();
 
         let mut reader = Reader::from_file(path).map_err(|err| {
-            anyhow!("Read file to str error in file: {:?}, {:?}", cloned_path, err)
+            anyhow!(
+                "Read file to str error in file: {:?}, {:?}",
+                cloned_path,
+                err
+            )
         })?;
 
         let mut buf = Vec::new();
-
 
         let cloned_path = cloned_path.clone();
 
@@ -54,7 +57,10 @@ pub fn get_user_profile_id(username: &str, profile_path: &str) -> Result<u64> {
 
                                         if let Some(id_str) = last_path_name.first() {
                                             let parse_res = id_str.parse::<u64>()?;
-                                            info!("found username: {}, id: {}", username, parse_res);
+                                            info!(
+                                                "found username: {}, id: {}",
+                                                username, parse_res
+                                            );
                                             return Ok(parse_res);
                                         }
                                     }
@@ -70,8 +76,12 @@ pub fn get_user_profile_id(username: &str, profile_path: &str) -> Result<u64> {
                 }
                 Err(e) => {
                     error!("in error!");
-                    return Err(anyhow!("Reader parse file error in file: {:?}: {:?}", cloned_path, e))
-                },
+                    return Err(anyhow!(
+                        "Reader parse file error in file: {:?}: {:?}",
+                        cloned_path,
+                        e
+                    ));
+                }
                 _ => {
                     //
                 }

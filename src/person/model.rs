@@ -6,6 +6,7 @@ use crate::{
     profile::model::Profile,
 };
 
+// 1.94 调整: StashItemTag -> ItemGroupTag
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct StashItemTag {
     pub class: i8,
@@ -18,6 +19,15 @@ pub struct ItemTag {
     pub slot: i8,
     pub index: i32,
     pub amount: i8,
+    pub key: String,
+}
+
+// 1.94 调整: StashItemTag -> ItemGroupTga
+#[derive(Debug, Serialize, Deserialize, Clone)]
+pub struct ItemGroupTag {
+    pub index: i32,
+    pub class: i8,
+    pub amount: i32,
     pub key: String,
 }
 
@@ -36,7 +46,7 @@ pub struct Person {
     // TODO unkown
     pub faction: String,
     pub name: String,
-    pub version: String,
+    pub version: u16,
     pub alive: i8,
     pub soldier_group_id: i8,
     pub soldier_group_name: String,
@@ -49,8 +59,10 @@ pub struct Person {
     pub backpack_hard_capacity: u16,
     // 1.92 新增: 仓库容量
     pub stash_hard_capacity: u16,
-    pub backpack_item_list: Vec<StashItemTag>,
-    pub stash_item_list: Vec<StashItemTag>,
+    // 1.94 调整: StashItemTag -> ItemGroupTag
+    pub backpack_item_list: Vec<ItemGroupTag>,
+    // 1.94 调整: StashItemTag -> ItemTag
+    pub stash_item_list: Vec<ItemGroupTag>,
 }
 
 impl Default for Person {
@@ -61,7 +73,7 @@ impl Default for Person {
             job_points: 0.0,
             faction: String::new(),
             name: String::new(),
-            version: String::new(),
+            version: 0,
             alive: 0,
             soldier_group_id: 0,
             soldier_group_name: String::from("default"),
@@ -136,6 +148,17 @@ impl Default for StashItemTag {
     }
 }
 
+impl Default for ItemGroupTag {
+    fn default() -> Self {
+        Self {
+            class: 0,
+            index: -1,
+            key: String::new(),
+            amount: 1,
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct UpdatePersonReq {
     pub person: Person,
@@ -154,7 +177,7 @@ pub struct GroupInfo {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct InsertSelectedPersonBackpackReq {
     pub profile_id_list: Vec<u64>,
-    pub backpack_item_list: Vec<StashItemTag>,
+    pub backpack_item_list: Vec<ItemGroupTag>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

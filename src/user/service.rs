@@ -64,7 +64,7 @@ async fn register(config: web::Data<AppData>, user: web::Json<RegisterReq>) -> i
                     HttpResponse::BadRequest()
                         .json(ResponseJson::default().set_err_msg(&e.to_string()))
                 }
-            }
+            };
         }
         Err(err) => {
             error!("register, error: {:?}", err);

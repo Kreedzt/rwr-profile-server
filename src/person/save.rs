@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
-use super::model::{Person, ItemTag};
+use super::model::{ItemTag, Person, ItemGroupTag};
+use crate::constant::MAX_DEFAULT_BACKPACK_LEN;
 use crate::person::{extract::extract_person, model::StashItemTag};
 use anyhow::Result;
 use quick_xml::events::{BytesEnd, BytesStart, BytesText, Event};
@@ -21,7 +22,7 @@ pub fn save_person(p: &Person) -> Result<String> {
     person_tag.push_attribute(("job_points", p.job_points.to_string().as_str()));
     person_tag.push_attribute(("faction", p.faction.to_string().as_str()));
     person_tag.push_attribute(("name", p.name.as_str()));
-    person_tag.push_attribute(("version", p.version.as_str()));
+    person_tag.push_attribute(("version", p.version.to_string().as_str()));
     person_tag.push_attribute(("alive", p.alive.to_string().as_str()));
     person_tag.push_attribute(("soldier_group_id", p.soldier_group_id.to_string().as_str()));
     person_tag.push_attribute(("soldier_group_name", p.soldier_group_name.as_str()));
@@ -59,12 +60,14 @@ pub fn save_person(p: &Person) -> Result<String> {
 
     writer.write_event(Event::Start(stash_tag))?;
 
+    // 1.94: v154
     for item in p.stash_item_list.iter() {
-        let mut stash_item_tag = BytesStart::owned(b"item".to_owned(), "item".len());
+        let mut stash_item_tag = BytesStart::owned(b"item_group".to_owned(), "item_group".len());
 
         stash_item_tag.push_attribute(("class", item.class.to_string().as_str()));
         stash_item_tag.push_attribute(("index", item.index.to_string().as_str()));
         stash_item_tag.push_attribute(("key", item.key.as_str()));
+        stash_item_tag.push_attribute(("amount", item.amount.to_string().as_str()));
 
         writer.write_event(Event::Empty(stash_item_tag))?;
     }
@@ -84,12 +87,14 @@ pub fn save_person(p: &Person) -> Result<String> {
     } else {
         writer.write_event(Event::Start(backpack_tag))?;
 
+        // 1.94: v154
         for item in p.backpack_item_list.iter() {
-            let mut backpack_item_tag = BytesStart::owned(b"item".to_owned(), "item".len());
+            let mut backpack_item_tag = BytesStart::owned(b"item_group".to_owned(), "item_group".len());
 
             backpack_item_tag.push_attribute(("class", item.class.to_string().as_str()));
             backpack_item_tag.push_attribute(("index", item.index.to_string().as_str()));
             backpack_item_tag.push_attribute(("key", item.key.as_str()));
+            backpack_item_tag.push_attribute(("amount", item.amount.to_string().as_str()));
 
             writer.write_event(Event::Empty(backpack_item_tag))?;
         }
@@ -119,7 +124,7 @@ pub fn save_person_to_file(path: &str, id: u64, person: &Person) -> Result<()> {
 pub async fn insert_person_list_backpack_to_file(
     path: &str,
     all_person_list: &Vec<(u64, Person)>,
-    item_list: &Vec<StashItemTag>,
+    item_list: &Vec<ItemGroupTag>,
 ) -> Result<()> {
     let new_all_person_list: Vec<(u64, Person)> = all_person_list
         .into_iter()
@@ -128,15 +133,38 @@ pub async fn insert_person_list_backpack_to_file(
             let id: u64 = _id.clone();
             let mut new_person: Person = _person.clone();
 
+            let source_total_item_count = _person.backpack_item_list.iter().fold(0, |acc, item| {
+                acc + item.amount
+            });
+
+            let insert_item_count = item_list.iter().fold(0, |acc, item| {
+                acc + item.amount
+            });
+
+
             // 若超出, 终止操作
-            if new_person.backpack_item_list.len() + item_list.len()
+            if source_total_item_count + insert_item_count
                 > new_person.backpack_hard_capacity.into()
             {
                 error!("person id: {} backpack over 255", id);
                 return (id, new_person);
             }
 
-            new_person.backpack_item_list.extend(item_list.to_owned());
+            let mut new_item_map: HashMap<String, ItemGroupTag> = HashMap::with_capacity(MAX_DEFAULT_BACKPACK_LEN.into());
+
+            for send_item in item_list {
+                new_item_map.insert(send_item.key.clone(), send_item.clone());
+            }
+
+            for source_item in _person.backpack_item_list.iter() {
+                new_item_map.entry(source_item.key.clone()).and_modify(|item| item.amount += source_item.amount).or_insert(source_item.clone());
+            }
+
+            let new_item_list = new_item_map.values().map(|item| {
+                item.clone()
+            }).collect::<Vec<ItemGroupTag>>();
+
+            new_person.backpack_item_list = new_item_list;
 
             (id, new_person)
         })
@@ -186,7 +214,8 @@ pub async fn delete_person_item_list_to_file(
                 .filter(|item| return !key_set.contains(&item.key.to_string()))
                 .collect();
 
-            new_person.item_list = new_person.item_list
+            new_person.item_list = new_person
+                .item_list
                 .into_iter()
                 .map(|item| {
                     if key_set.contains(&item.key.to_string()) {

@@ -1,16 +1,23 @@
 // SPDX-License-Identifier: GPL-3.0-only
 use crate::{
+    constant::{MAX_DEFAULT_STASH_LEN, MAX_PERSON_FILE_VERSION},
     person::model::{ItemTag, OrderTag, Person, StashItemTag},
     profile::{extract::extract_profile, model::Profile},
 };
 use anyhow::{anyhow, Result};
 use quick_xml::{events::Event, Reader};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
-use std::{fs, io, str};
+use std::{collections::HashMap, fs, io, str};
 use tracing::info;
 
+use super::model::{ItemGroupTag};
+
 pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
+    // 优先以最高版本解析
     let mut person = Person::default();
+
+    // 当前解析的版本
+    let mut this_version = MAX_PERSON_FILE_VERSION;
 
     let path = format!("{}/{}.person", folder_path, id);
 
@@ -54,7 +61,7 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
                                     person.name = attr_value;
                                 }
                                 b"version" => {
-                                    person.version = attr_value;
+                                    person.version = attr_value.parse()?;
                                 }
                                 b"alive" => {
                                     person.alive = attr_value.parse()?;
@@ -144,101 +151,77 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
 
                         person.order = order_item;
                     }
-                    b"item" => {
-                        if is_in_backpack {
-                            let mut backpack_item = StashItemTag::default();
+                    // item_group 仅在 1.94 中存在, 且仅在 stash/backpack 中
+                    b"item_group" => {
+                        let mut item_group = ItemGroupTag::default();
 
-                            for attr in e.attributes() {
-                                let attr_unwrap_res = attr?;
-                                let attr_value =
-                                    attr_unwrap_res.unescape_and_decode_value(&reader)?;
-                                let attr_key = attr_unwrap_res.key;
+                        for attr in e.attributes() {
+                            let attr_unwrap_res = attr?;
+                            let attr_value = attr_unwrap_res.unescape_and_decode_value(&reader)?;
+                            let attr_key = attr_unwrap_res.key;
 
-                                // println!(
-                                //     "attr: {}, value: {}",
-                                //     str::from_utf8(attr_key)?,
-                                //     attr_value
-                                // );
+                            // println!(
+                            //     "attr: {}, value: {}",
+                            //     str::from_utf8(attr_key)?,
+                            //     attr_value
+                            // );
 
-                                match attr_key {
-                                    b"class" => {
-                                        backpack_item.class = attr_value.parse()?;
-                                    }
-                                    b"index" => {
-                                        backpack_item.index = attr_value.parse()?;
-                                    }
-                                    b"key" => {
-                                        backpack_item.key = attr_value.parse()?;
-                                    }
-                                    _ => (),
+                            match attr_key {
+                                b"class" => {
+                                    item_group.class = attr_value.parse()?;
                                 }
-                            }
-
-                            person.backpack_item_list.push(backpack_item);
-                        } else if is_in_stash {
-                            let mut stash_item = StashItemTag::default();
-
-                            for attr in e.attributes() {
-                                let attr_unwrap_res = attr?;
-                                let attr_value =
-                                    attr_unwrap_res.unescape_and_decode_value(&reader)?;
-                                let attr_key = attr_unwrap_res.key;
-
-                                // println!(
-                                //     "attr: {}, value: {}",
-                                //     str::from_utf8(attr_key)?,
-                                //     attr_value
-                                // );
-
-                                match attr_key {
-                                    b"class" => {
-                                        stash_item.class = attr_value.parse()?;
-                                    }
-                                    b"index" => {
-                                        stash_item.index = attr_value.parse()?;
-                                    }
-                                    b"key" => {
-                                        stash_item.key = attr_value.parse()?;
-                                    }
-                                    _ => (),
+                                b"index" => {
+                                    item_group.index = attr_value.parse()?;
                                 }
-                            }
-
-                            person.stash_item_list.push(stash_item);
-                        } else {
-                            let mut item_tag = ItemTag::default();
-
-                            for attr in e.attributes() {
-                                let attr_unwrap_res = attr?;
-                                let attr_value =
-                                    attr_unwrap_res.unescape_and_decode_value(&reader)?;
-                                let attr_key = attr_unwrap_res.key;
-
-                                // println!(
-                                //     "attr: {}, value: {}",
-                                //     str::from_utf8(attr_key)?,
-                                //     attr_value
-                                // );
-
-                                match attr_key {
-                                    b"slot" => {
-                                        item_tag.slot = attr_value.parse()?;
-                                    }
-                                    b"index" => {
-                                        item_tag.index = attr_value.parse()?;
-                                    }
-                                    b"amount" => {
-                                        item_tag.amount = attr_value.parse()?;
-                                    }
-                                    b"key" => {
-                                        item_tag.key = attr_value;
-                                    }
-                                    _ => (),
+                                b"key" => {
+                                    item_group.key = attr_value.parse()?;
                                 }
+                                b"amount" => {
+                                    item_group.amount = attr_value.parse()?;
+                                }
+                                _ => (),
                             }
-
-                            person.item_list.push(item_tag);
                         }
+
+                        if is_in_backpack {
+                            person.backpack_item_list.push(item_group);
+                        } else if is_in_stash {
+                            person.stash_item_list.push(item_group);
+                        }
+                    }
+                    b"item" => {
+                        let mut item_tag = ItemTag::default();
+
+                        for attr in e.attributes() {
+                            let attr_unwrap_res = attr?;
+                            let attr_value =
+                                attr_unwrap_res.unescape_and_decode_value(&reader)?;
+                            let attr_key = attr_unwrap_res.key;
+
+                            // println!(
+                            //     "attr: {}, value: {}",
+                            //     str::from_utf8(attr_key)?,
+                            //     attr_value
+                            // );
+
+                            match attr_key {
+                                b"slot" => {
+                                    item_tag.slot = attr_value.parse()?;
+                                }
+                                b"index" => {
+                                    item_tag.index = attr_value.parse()?;
+                                }
+                                b"amount" => {
+                                    item_tag.amount = attr_value.parse()?;
+                                }
+                                b"key" => {
+                                    item_tag.key = attr_value;
+                                }
+                                _ => (),
+                            }
+                        }
+
+                        person.item_list.push(item_tag);
                     }
                     b"backpack" => {}
                     _ => (),
@@ -252,6 +235,15 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
             Err(e) => panic!("Error at position {} : {:?}", reader.buffer_position(), e),
             _ => (),
         }
+    }
+
+    if person.version != MAX_PERSON_FILE_VERSION {
+        anyhow!(
+            "{} Person file \"version\" not correct, expected: {}, got: {}",
+            id,
+            MAX_PERSON_FILE_VERSION,
+            person.version
+        );
     }
 
     Ok(person)

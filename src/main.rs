@@ -41,7 +41,7 @@ async fn main() -> Result<()> {
         snapshot_str: Mutex::new(String::new()),
         snapshot_time: Mutex::new(String::new()),
         // ranks snapshot
-        snapshot_ranks: Mutex::new(vec![])
+        snapshot_ranks: Mutex::new(vec![]),
     });
 
     let file_appender = rolling::daily(&server_log_folder_path, "info.log");

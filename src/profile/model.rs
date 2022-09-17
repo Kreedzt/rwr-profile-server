@@ -21,7 +21,7 @@ pub struct Stats {
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct Profile {
-    pub game_version: String,
+    pub game_version: u64,
     pub username: String,
     pub sid: String,
     pub rid: String,
@@ -60,7 +60,7 @@ impl Default for Stats {
 impl Default for Profile {
     fn default() -> Self {
         Self {
-            game_version: String::new(),
+            game_version: 0,
             username: String::new(),
             sid: String::new(),
             rid: String::new(),

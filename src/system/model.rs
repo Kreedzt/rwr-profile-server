@@ -12,5 +12,5 @@ pub struct QuickItem {
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct RankItem {
     pub xp: f64,
-    pub name: String
+    pub name: String,
 }

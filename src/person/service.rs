@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 use super::model::{
-    InsertSelectedPersonBackpackReq, Person, StashItemTag, UpdateAllPersonSoldierGroupReq,
+    InsertSelectedPersonBackpackReq, Person, ItemGroupTag, UpdateAllPersonSoldierGroupReq,
     UpdatePersonReq, UpdateSelectedPersonSoldierGroupReq,
 };
 use crate::model::ResponseJson;
@@ -182,7 +182,7 @@ async fn reset_xp(
 async fn update_backpack(
     config: web::Data<AppData>,
     id: web::Path<(u64,)>,
-    data: web::Json<Vec<StashItemTag>>,
+    data: web::Json<Vec<ItemGroupTag>>,
 ) -> impl Responder {
     info!("");
     let query_id = id.into_inner().0;
@@ -226,7 +226,7 @@ async fn update_backpack(
 async fn update_stash(
     config: web::Data<AppData>,
     id: web::Path<(u64,)>,
-    data: web::Json<Vec<StashItemTag>>,
+    data: web::Json<Vec<ItemGroupTag>>,
 ) -> impl Responder {
     info!("");
     let query_id = id.into_inner().0;
@@ -308,7 +308,7 @@ async fn update_group_type(
 #[post("/insert_all_person_backpack")]
 async fn insert_all_person_backpack(
     config: web::Data<AppData>,
-    data: web::Json<Vec<StashItemTag>>,
+    data: web::Json<Vec<ItemGroupTag>>,
 ) -> impl Responder {
     info!("");
 
