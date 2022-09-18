@@ -2,7 +2,7 @@
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    constant::{MAX_DEFAULT_BACKPACK_LEN, MAX_DEFAULT_STASH_LEN},
+    constant::{MAX_DEFAULT_BACKPACK_LEN, MAX_DEFAULT_STASH_LEN, MAX_PERSON_FILE_VERSION},
     profile::model::Profile,
 };
 
@@ -73,7 +73,7 @@ impl Default for Person {
             job_points: 0.0,
             faction: String::new(),
             name: String::new(),
-            version: 0,
+            version: MAX_PERSON_FILE_VERSION,
             alive: 0,
             soldier_group_id: 0,
             soldier_group_name: String::from("default"),

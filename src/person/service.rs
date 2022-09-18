@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: GPL-3.0-only
 use super::model::{
-    InsertSelectedPersonBackpackReq, Person, ItemGroupTag, UpdateAllPersonSoldierGroupReq,
+    InsertSelectedPersonBackpackReq, ItemGroupTag, Person, UpdateAllPersonSoldierGroupReq,
     UpdatePersonReq, UpdateSelectedPersonSoldierGroupReq,
 };
 use crate::model::ResponseJson;

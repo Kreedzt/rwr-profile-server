@@ -10,14 +10,11 @@ use rayon::iter::{IntoParallelIterator, ParallelIterator};
 use std::{collections::HashMap, fs, io, str};
 use tracing::info;
 
-use super::model::{ItemGroupTag};
+use super::model::ItemGroupTag;
 
 pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
     // 优先以最高版本解析
     let mut person = Person::default();
-
-    // 当前解析的版本
-    let mut this_version = MAX_PERSON_FILE_VERSION;
 
     let path = format!("{}/{}.person", folder_path, id);
 
@@ -194,8 +191,7 @@ pub fn extract_person(id: u64, folder_path: &str) -> Result<Person> {
 
                         for attr in e.attributes() {
                             let attr_unwrap_res = attr?;
-                            let attr_value =
-                                attr_unwrap_res.unescape_and_decode_value(&reader)?;
+                            let attr_value = attr_unwrap_res.unescape_and_decode_value(&reader)?;
                             let attr_key = attr_unwrap_res.key;
 
                             // println!(

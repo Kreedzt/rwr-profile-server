@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: GPL-3.0-only
-use super::model::{ItemTag, Person, ItemGroupTag};
+use super::model::{ItemGroupTag, ItemTag, Person};
 use crate::constant::MAX_DEFAULT_BACKPACK_LEN;
 use crate::person::{extract::extract_person, model::StashItemTag};
 use anyhow::Result;
@@ -89,7 +89,8 @@ pub fn save_person(p: &Person) -> Result<String> {
 
         // 1.94: v154
         for item in p.backpack_item_list.iter() {
-            let mut backpack_item_tag = BytesStart::owned(b"item_group".to_owned(), "item_group".len());
+            let mut backpack_item_tag =
+                BytesStart::owned(b"item_group".to_owned(), "item_group".len());
 
             backpack_item_tag.push_attribute(("class", item.class.to_string().as_str()));
             backpack_item_tag.push_attribute(("index", item.index.to_string().as_str()));
@@ -133,14 +134,12 @@ pub async fn insert_person_list_backpack_to_file(
             let id: u64 = _id.clone();
             let mut new_person: Person = _person.clone();
 
-            let source_total_item_count = _person.backpack_item_list.iter().fold(0, |acc, item| {
-                acc + item.amount
-            });
+            let source_total_item_count = _person
+                .backpack_item_list
+                .iter()
+                .fold(0, |acc, item| acc + item.amount);
 
-            let insert_item_count = item_list.iter().fold(0, |acc, item| {
-                acc + item.amount
-            });
-
+            let insert_item_count = item_list.iter().fold(0, |acc, item| acc + item.amount);
 
             // 若超出, 终止操作
             if source_total_item_count + insert_item_count
@@ -150,19 +149,24 @@ pub async fn insert_person_list_backpack_to_file(
                 return (id, new_person);
             }
 
-            let mut new_item_map: HashMap<String, ItemGroupTag> = HashMap::with_capacity(MAX_DEFAULT_BACKPACK_LEN.into());
+            let mut new_item_map: HashMap<String, ItemGroupTag> =
+                HashMap::with_capacity(MAX_DEFAULT_BACKPACK_LEN.into());
 
             for send_item in item_list {
                 new_item_map.insert(send_item.key.clone(), send_item.clone());
             }
 
             for source_item in _person.backpack_item_list.iter() {
-                new_item_map.entry(source_item.key.clone()).and_modify(|item| item.amount += source_item.amount).or_insert(source_item.clone());
+                new_item_map
+                    .entry(source_item.key.clone())
+                    .and_modify(|item| item.amount += source_item.amount)
+                    .or_insert(source_item.clone());
             }
 
-            let new_item_list = new_item_map.values().map(|item| {
-                item.clone()
-            }).collect::<Vec<ItemGroupTag>>();
+            let new_item_list = new_item_map
+                .values()
+                .map(|item| item.clone())
+                .collect::<Vec<ItemGroupTag>>();
 
             new_person.backpack_item_list = new_item_list;
 

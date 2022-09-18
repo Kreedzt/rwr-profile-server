@@ -44,14 +44,12 @@ pub async fn async_extract_query_data(folder_path: String) -> Result<ExtractAllV
             return tokio::spawn(async move {
                 let person = extract_person(id, &cloned_folder_path);
                 match person {
-                    Ok(p) => {
-                        Ok(Person {
-                            stash_item_list: vec![],
-                            backpack_item_list: vec![],
-                            item_list: vec![],
-                            ..p
-                        })
-                    },
+                    Ok(p) => Ok(Person {
+                        stash_item_list: vec![],
+                        backpack_item_list: vec![],
+                        item_list: vec![],
+                        ..p
+                    }),
                     Err(e) => {
                         error!("error in extract_person call: {}, {:?}", id, e);
                         Err(e)
@@ -70,9 +68,7 @@ pub async fn async_extract_query_data(folder_path: String) -> Result<ExtractAllV
             return tokio::spawn(async move {
                 let profile = extract_profile(id, &cloned_folder_path);
                 match profile {
-                    Ok(p) => {
-                        Ok(p)
-                    },
+                    Ok(p) => Ok(p),
                     Err(e) => {
                         error!("error in extract_profile call: {}, {:?}", id, e);
                         Err(e)

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-3.0-only
-use crate::model::{AppData};
-use crate::person::{service::person_config, async_extract::async_extract_query_data};
+use crate::model::AppData;
+use crate::person::{async_extract::async_extract_query_data, service::person_config};
 use crate::profile::service::profile_config;
 use crate::system::service::system_config;
 use crate::user::service::user_config;
+use crate::version_update::preupdate::preupdate;
 use actix_web::{web, App, HttpServer};
 use anyhow::{Error, Result};
 use chrono::prelude::*;
@@ -23,6 +24,7 @@ mod person;
 mod profile;
 mod system;
 mod user;
+mod version_update;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -65,6 +67,10 @@ async fn main() -> Result<()> {
     info!("completed reading app_data: {:?}", app_data);
 
     let app_data_c = app_data.clone();
+
+    // update file version
+    let folder_path = app_data_c.rwr_profile_folder_path.clone();
+    preupdate(folder_path).await?;
 
     if config.server_hourly_request {
         tokio::task::spawn(async move {
