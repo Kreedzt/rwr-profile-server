@@ -2,4 +2,5 @@
 /temp
 /.idea
 
-.config.json
+config.json
+ranks.json
