@@ -10,7 +10,7 @@ env:
 
 jobs:
   release:
-    name: Cross build for ${{ matrix.target }}
+    name: dist (${{ matrix.target }})
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -74,10 +74,10 @@ jobs:
           rustup component add rust-src
 
       - name: Run tests
-        run: cross test --release --target ${{ matrix.target }} --verbose
+        run: cargo test --release --target ${{ matrix.target }} --verbose
 
       - name: Build release
-        run: cross build --release --target ${{ matrix.target }}
+        run: cargo build --release --target ${{ matrix.target }}
 
       - name: Run UPX
         # Upx may not support some platforms. Ignore the errors
