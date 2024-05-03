@@ -7,71 +7,77 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  CARGO_NET_RETRY: 10
+  USTUP_MAX_RETRIES: 10
+  MACOSX_DEPLOYMENT_TARGET: 10.15
+  CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER: aarch64-linux-gnu-gcc
+  CARGO_TARGET_ARM_UNKNOWN_LINUX_GNUEABIHF_LINKER: arm-linux-gnueabihf-gcc
+
 
 jobs:
   release:
-    name: dist (${{ matrix.target }})
-    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            exe: rwr-profile-server
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            exe: rwr-profile-server
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-musl
-            exe: rwr-profile-server
-          - os: ubuntu-latest
-            target: arm-unknown-linux-musleabi
-            exe: rwr-profile-server
-          - os: ubuntu-latest
-            target: arm-unknown-linux-musleabihf
-            exe: rwr-profile-server
-          - os: ubuntu-latest
-            target: armv7-unknown-linux-musleabihf
-            exe: rwr-profile-server
-          - os: ubuntu-latest
-            target: mips-unknown-linux-gnu
-            exe: rwr-profile-server
-          - os: ubuntu-latest
-            target: mips-unknown-linux-musl
-            exe: rwr-profile-server
-          - os: ubuntu-latest
-            target: mipsel-unknown-linux-gnu
-            exe: rwr-profile-server
-          - os: ubuntu-latest
-            target: mipsel-unknown-linux-musl
-            exe: rwr-profile-server
-          - os: ubuntu-latest
-            target: mips64-unknown-linux-gnuabi64
-            exe: rwr-profile-server
-          - os: ubuntu-latest
-            target: mips64el-unknown-linux-gnuabi64
-            exe: rwr-profile-server
-
-          - os: macos-latest
-            target: x86_64-apple-darwin
-            exe: rwr-profile-server
-
-          - os: ubuntu-latest
-            target: x86_64-pc-windows-gnu
-            exe: rwr-profile-server.exe
-
           - os: windows-latest
             target: x86_64-pc-windows-msvc
+            exe: rwr-profile-server
+          - os: windows-latest
+            target: i686-pc-windows-msvc
             exe: rwr-profile-server.exe
+          - os: windows-latest
+            target: aarch64-pc-windows-msvc
+            exe: rwr-profile-server.exe
+          - os: ubuntu-20.04
+            target: x86_64-unknown-linux-gnu
+            container: rockylinux:8
+            exe: rwr-profile-server
+          - os: ubuntu-20.04
+            target: aarch64-unknown-linux-gnu
+            exe: rwr-profile-server
+          - os: ubuntu-20.04
+            target: arm-unknown-linux-gnueabihf
+            exe: rwr-profile-server
+          - os: macos-12
+            target: x86_64-apple-darwin
+            exe: rwr-profile-server
+          - os: macos-12
+            target: aarch64-apple-darwin
+            exe: rwr-profile-server
+
+    name: dist (${{ matrix.target }})
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+
     steps:
       - name: Checkout regpository
         uses: actions/checkout@v4
+
+     - name: Install toolchain dependencies
+       if: matrix.container == 'rockylinux:8'
+       shell: bash
+       run: |
+        dnf install -y gcc
+        curl --proto '=https' --tlsv1.2 --retry 10 --retry-connrefused -fsSL "https://sh.rustup.rs" | sh -s -- --profile minimal --default-toolchain none -y
+        echo "${CARGO_HOME:-$HOME/.cargo}/bin" >> $GITHUB_PATH
 
       - name: Install Rust toolchain
         run: |
           rustup update --no-self-update stable
           rustup target add ${{ matrix.target }}
           rustup component add rust-src
+
+      - name: Update apt repositories
+        if: matrix.target == 'aarch64-unknown-linux-gnu' || matrix.target == 'arm-unknown-linux-gnueabihf'
+        run: sudo apt-get update
+
+      - name: Install AArch64 target toolchain
+        if: matrix.target == 'aarch64-unknown-linux-gnu'
+        run: sudo apt-get install gcc-aarch64-linux-gnu
+
+      - name: Install ARM target toolchain
+        if: matrix.target == 'arm-unknown-linux-gnueabihf'
+        run: sudo apt-get install gcc-arm-linux-gnueabihf
 
       - name: Run tests
         run: cargo test --release --target ${{ matrix.target }} --verbose
