@@ -64,17 +64,21 @@ jobs:
             target: x86_64-pc-windows-msvc
             exe: rwr-profile-server.exe
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-      - name: Install cross
-        run: cargo install --version 0.1.16 cross
+      - name: Checkout regpository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        run: |
+          rustup update --no-self-update stable
+          rustup target add ${{ matrix.target }}
+          rustup component add rust-src
+
       - name: Run tests
         run: cross test --release --target ${{ matrix.target }} --verbose
+
       - name: Build release
         run: cross build --release --target ${{ matrix.target }}
+
       - name: Run UPX
         # Upx may not support some platforms. Ignore the errors
         continue-on-error: true
@@ -85,10 +89,12 @@ jobs:
           version: v3.96
           files: target/${{ matrix.target }}/release/${{ matrix.exe }}
           args: -q --best --lzma
+
       - uses: actions/upload-artifact@v2
         with:
           name: rwr-profile-server-${{ matrix.target }}
           path: target/${{ matrix.target }}/release/${{ matrix.exe }}
+
       - name: Zip Release
         uses: TheDoctor0/zip-release@0.7.5
         with:
@@ -96,6 +102,7 @@ jobs:
           filename: rwr-profile-server-${{ matrix.target }}.zip
           directory: target/${{ matrix.target }}/release/
           path: ${{ matrix.exe }}
+
       - name: Publish
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')
@@ -103,6 +110,7 @@ jobs:
           files: target/${{ matrix.target }}/release/rwr-profile-server-${{ matrix.target }}.zip
           generate_release_notes: true
           draft: true
+
   docker:
     name: Publish to Docker Hub
     if: startsWith(github.ref, 'refs/tags/')
@@ -111,11 +119,13 @@ jobs:
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
+
       - name: Login to DockerHub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+
       - name: Build and push
         id: docker_build
         uses: docker/build-push-action@v5
