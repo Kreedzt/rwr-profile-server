@@ -46,23 +46,28 @@ async fn main() -> Result<()> {
         snapshot_ranks: Mutex::new(vec![]),
     });
 
-    let file_appender = rolling::daily(&server_log_folder_path, "info.log");
-
-    let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
-
-    let fmt_layer = tracing_subscriber::fmt::layer()
-        .with_writer(non_blocking)
-        .with_ansi(false)
-        .with_filter(LevelFilter::INFO);
-
     let std_out_layer = tracing_subscriber::fmt::layer()
         .pretty()
         .with_filter(LevelFilter::INFO);
 
-    tracing_subscriber::registry()
-        .with(std_out_layer)
-        .with(fmt_layer)
-        .init();
+    if !server_log_folder_path.is_empty() {
+        let file_appender = rolling::daily(&server_log_folder_path, "info.log");
+        let (non_blocking, _guard) = tracing_appender::non_blocking(file_appender);
+
+        let fmt_layer = tracing_subscriber::fmt::layer()
+            .with_ansi(false)
+            .with_writer(non_blocking)
+            .with_filter(LevelFilter::INFO);
+
+        tracing_subscriber::registry()
+            .with(std_out_layer)
+            .with(fmt_layer)
+            .init();
+    } else {
+        tracing_subscriber::registry()
+            .with(std_out_layer)
+            .init();
+    }
 
     info!("completed reading app_data: {:?}", app_data);
 
