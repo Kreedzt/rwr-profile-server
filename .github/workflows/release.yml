@@ -247,7 +247,7 @@ jobs:
         shell: bash
         run: |
           version="${{ needs.create-release.outputs.version }}"
-          gh release upload "$version" ${{ env.ASSET }} ${{ env.ASSET_SUM }}
+          gh release upload "v$version" ${{ env.ASSET }} ${{ env.ASSET_SUM }}
 
   docker:
     name: Publish to Docker Hub
