@@ -121,7 +121,7 @@ jobs:
       # in subtle ways.
       CROSS_VERSION: v0.2.5
       # Emit backtraces on panics.
-      RUST_BACKTRACE: 1
+      RUST_BACKTRACE: 1 
       # Build static releases with PCRE2.
       PCRE2_SYS_STATIC: 1
 
@@ -138,10 +138,6 @@ jobs:
       - name: Install packages (Ubuntu)
         shell: bash
         run: |
-          if ! command -V sudo; then
-            apt-get update
-            apt-get install -y --no-install-recommends sudo
-          fi \
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends
             zsh xz-utils liblz4-tool musl-tools brotli zstd
