@@ -132,6 +132,7 @@ jobs:
           rustup component add rust-src
       
       - name: Install packages (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
         shell: bash
         run: |
           sudo apt-get update
