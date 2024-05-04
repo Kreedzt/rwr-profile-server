@@ -195,7 +195,7 @@ async fn update_backpack(
                 ..person
             };
 
-            if new_person.backpack_item_list.len() > new_person.backpack_hard_capacity.into() {
+            if new_person.backpack_item_list.len() > <u16 as Into<usize>>::into(new_person.backpack_hard_capacity) {
                 error!("backpack item over 255");
                 return HttpResponse::BadRequest()
                     .json(ResponseJson::default().set_err_msg("backpack overload 255"));
@@ -239,7 +239,7 @@ async fn update_stash(
                 ..person
             };
 
-            if new_person.stash_item_list.len() > new_person.stash_hard_capacity.into() {
+            if new_person.stash_item_list.len() > <u16 as Into<usize>>::into(new_person.stash_hard_capacity) {
                 error!("stash item over 300");
                 return HttpResponse::BadRequest()
                     .json(ResponseJson::default().set_err_msg("stash overload 300"));
@@ -702,13 +702,13 @@ async fn upload_person(
 
     return match extract_person(id, &config.server_upload_temp_folder_path) {
         Ok(person) => {
-            if person.backpack_item_list.len() > person.backpack_hard_capacity.into() {
+            if person.backpack_item_list.len() > <u16 as Into<usize>>::into(person.backpack_hard_capacity) {
                 let custom_err = ResponseJson::default().set_err_msg("person backpack over 255");
 
                 return Ok(HttpResponse::BadRequest().json(custom_err));
             }
 
-            if person.stash_item_list.len() > person.stash_hard_capacity.into() {
+            if person.stash_item_list.len() > <u16 as Into<usize>>::into(person.stash_hard_capacity) {
                 let custom_err = ResponseJson::default().set_err_msg("person stash over 300");
 
                 return Ok(HttpResponse::BadRequest().json(custom_err));
