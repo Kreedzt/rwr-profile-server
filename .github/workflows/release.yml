@@ -36,6 +36,7 @@ jobs:
   build-release:
     needs: ['verify-release']
     strategy:
+      fail-fast: false
       matrix:
         include:
           - build: linux
