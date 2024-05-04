@@ -12,8 +12,8 @@ env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  create-release:
-    name: create-release
+  verify-release:
+    name: verify-release
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -30,15 +30,11 @@ jobs:
             echo "version does not match Cargo.toml" >&2
             exit 1
           fi
-      - name: Create GitHub release
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: gh release create $VERSION --draft --verify-tag --title $VERSION
     outputs:
       version: ${{ env.VERSION }}
 
   build-release:
-    needs: ['create-release']
+    needs: ['verify-release']
     strategy:
       matrix:
         include:
@@ -207,7 +203,7 @@ jobs:
       - name: Determine archive name
         shell: bash
         run: |
-          version="${{ needs.create-release.outputs.version }}"
+          version="${{ needs.verify-release.outputs.version }}"
           echo "ARCHIVE=rwr-profile-server-$version-${{ matrix.target }}" >> $GITHUB_ENV
 
       - name: Creating directory for archive
@@ -241,7 +237,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          version="${{ needs.create-release.outputs.version }}"
+          version="${{ needs.verify-release.outputs.version }}"
           gh release upload "v$version" ${{ env.ASSET }} ${{ env.ASSET_SUM }}
 
   docker:
