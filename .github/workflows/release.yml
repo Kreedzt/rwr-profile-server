@@ -237,7 +237,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: bash
         run: |
-          version="v${{ needs.verify-release.outputs.version }}"
+          version="${{ needs.verify-release.outputs.version }}"
           gh release upload "$version" ${{ env.ASSET }} ${{ env.ASSET_SUM }}
 
   docker:
