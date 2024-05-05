@@ -25,6 +25,7 @@ mod profile;
 mod system;
 mod user;
 mod version_update;
+mod ping;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -121,6 +122,7 @@ async fn main() -> Result<()> {
             .configure(profile_config)
             .configure(person_config)
             .configure(system_config)
+            .configure(ping::ping_config)
     })
     .bind(format!("0.0.0.0:{}", config.port))?
     .run()
