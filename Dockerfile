@@ -1,23 +1,31 @@
-# build
-FROM ekidd/rust-musl-builder:latest as build
+FROM messense/rust-musl-cross:x86_64-musl as build
 
-WORKDIR /rwr-profile-server
-
-COPY ./Cargo.toml ./Cargo.toml
-COPY ./Cargo.lock ./Cargo.lock
-COPY ./src ./src
-RUN cargo build --locked --release
-RUN mkdir -p build-out/
-RUN cp target/x86_64-unknown-linux-musl/release/rwr-profile-server build-out/
-
-# run
-# FROM rust:1.61.0-slim-buster
-FROM scratch
+# create a new empty shell project
+WORKDIR /
+RUN USER=root cargo new --bin app
 WORKDIR /app
 
-COPY --from=build /rwr-profile-server/build-out/rwr-profile-server .
+# copy over your manifests
+COPY ./Cargo.lock ./Cargo.lock
+COPY ./Cargo.toml ./Cargo.toml
+
+# this build step will cache your dependencies
+RUN cargo build --release --locked & rm ./src/*.rs
+
+# copy your source tree
+COPY ./src ./src
+
+# build for release
+RUN cargo build --release --locked
+
+# our final base
+FROM scratch
+
+# copy the build artifact from the build stage
+COPY --from=build /app/target/x86_64-unknown-linux-musl/release/rwr-profile-server .
 COPY ./config_example.json ./config.json
 
-EXPOSE 8080
+EXPOSE 80
 
+# set the startup command to run your binary
 CMD ["./rwr-profile-server"]

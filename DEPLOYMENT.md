@@ -89,17 +89,23 @@ config.json 配置项参考如下:
 
 ## Docker 启动
 
-对外的暴露的端口为 8080
+对外的暴露的端口为 80
 
 挂载的目录说明:
 - /app/data: 对应文件准备中的 `data` 目录
-- /app/logs: 对应文件准备中的  `logs` 目录
 - /app/profiles: 对应 rwr 存档目录
 - /app/upload_temp: 对应文件准备中的 `upload_temp`
 
+> 可额外挂载 /app/config.json 覆盖默认配置
+
 启动命令参考:
 ```sh
-docker run --name=rwr-profile-server-docker -d -p 8080:8080 -v $PWD/data:/app/data -v $PWD/logs:/app/logs -v $PWD/profiles:/app/profiles -v $PWD/upload_temp:/app/upload_temp -d zhaozisong0/rwr-profile-server:latest
+docker run --name=rwr-profile-server-docker -d -p 8080:8080 \
+  -v $PWD/data:/app/data \
+  -v $PWD/logs:/app/logs \
+  -v $PWD/profiles:/app/profiles \
+  -v $PWD/upload_temp:/app/upload_temp \
+  -d zhaozisong0/rwr-profile-server:latest
 ```
 
 ### 额外说明
