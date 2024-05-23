@@ -2,9 +2,9 @@
 
 ![license](https://badgen.net/github/license/Kreedzt/rwr-profile-server)
 ![latest release](https://badgen.net/github/release/Kreedzt/rwr-profile-server)
-![commits count](https://badgen.net/github/commits/Kreedzt/rwr-profile-server)
-![last commit](https://badgen.net/github/last-commit/Kreedzt/rwr-profile-server)
-![rwr_version](https://badgen.net/badge/RWR/1.94/orange)
+[![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=Kreedzt_rwr-profile-server&metric=sqale_rating)](https://sonarcloud.io/summary/new_code?id=Kreedzt_rwr-profile-server)
+[![Docker Image Size](https://badgen.net/docker/size/zhaozisong0/rwr-profile-server?icon=docker&label=image%20size)](https://hub.docker.com/r/zhaozisong0/rwr-profile-server)
+![rwr_version](https://badgen.net/badge/RWR/1.97/orange)
 
 ## 开发
 > 该项目提供了前端界面, 可用前端界面来进行开发调试: https://github.com/Kreedzt/rwr-profile-web
